@@ -1,0 +1,7 @@
+# prometheus-pve-exporter config. Token: a user with PVEAuditor on / is
+# enough (read-only). Copy to pve.yml, which is gitignored.
+default:
+  user: prometheus@pve
+  token_name: exporter
+  token_value: REPLACE-WITH-TOKEN
+  verify_ssl: false

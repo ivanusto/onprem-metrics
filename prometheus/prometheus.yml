@@ -1,0 +1,76 @@
+# Prometheus for the on-prem lab. Three kinds of target, three intervals.
+# Addresses are examples; put the real ones in targets/*.yml (gitignored
+# except the .example files) so this file stays public.
+global:
+  scrape_interval: 60s
+  scrape_timeout: 10s
+  evaluation_interval: 60s
+  external_labels:
+    site: onprem-lab
+
+rule_files:
+  - rules/*.yml
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: prometheus
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # DGX Spark nodes: node_exporter with the textfile collector.
+  # 15 s so a 240 s soak budget is seen as 16 samples, not 4.
+  - job_name: gb10
+    scrape_interval: 15s
+    file_sd_configs:
+      - files: [targets/gb10.yml]
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: "([^:]+):.*"
+        target_label: node
+        replacement: "$1"
+
+  # The host that runs nas-textfile.sh and drills-textfile.py exposes
+  # them through its own node_exporter. One target, every NAS inside.
+  - job_name: collector-host
+    scrape_interval: 60s
+    file_sd_configs:
+      - files: [targets/collector.yml]
+
+  # Proxmox VE via prometheus-pve-exporter (read-only API token).
+  - job_name: pve
+    scrape_interval: 60s
+    metrics_path: /pve
+    params:
+      module: [default]
+      cluster: ["1"]
+      node: ["1"]
+    file_sd_configs:
+      - files: [targets/pve.yml]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: pve-exporter:9221
+
+  # QNAP NAS over SNMP v3: hardware, pools, folders, SMART, fans, UPS,
+  # services, apps, interface counters. snmp.yml is built from QTS-MIB
+  # by snmp-build.py; auth lives in snmp-auth.yml.
+  - job_name: nas-snmp
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    metrics_path: /snmp
+    params:
+      module: [qnap]
+      auth: [nas_v3]
+    file_sd_configs:
+      - files: [targets/nas-snmp.yml]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: snmp-exporter:9116

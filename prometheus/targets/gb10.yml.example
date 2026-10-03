@@ -1,0 +1,2 @@
+- targets: ["192.168.2.131:9100", "192.168.2.141:9100"]
+  labels: {role: gpu-node, hw: dgx-spark}

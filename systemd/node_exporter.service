@@ -1,0 +1,15 @@
+[Unit]
+Description=Prometheus node_exporter with textfile collector
+After=network.target
+
+[Service]
+User=node-exporter
+Group=node-exporter
+ExecStart=/usr/local/bin/node_exporter \
+  --collector.textfile.directory=/var/lib/node_exporter/textfile \
+  --collector.thermal_zone \
+  --web.listen-address=:9100
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

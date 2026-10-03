@@ -1,0 +1,16 @@
+[Unit]
+Description=gb10 textfile metrics for node_exporter (thermal soak, NV_ERR_NO_MEMORY)
+After=network.target
+
+[Service]
+Type=oneshot
+User=gb10-metrics
+Group=node-exporter
+AmbientCapabilities=CAP_SYSLOG
+CapabilityBoundingSet=CAP_SYSLOG
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/node_exporter/textfile /var/lib/gb10-textfile
+StateDirectory=gb10-textfile
+ExecStart=/usr/local/bin/gb10-textfile.py --out /var/lib/node_exporter/textfile/gb10.prom --state /var/lib/gb10-textfile/state.json

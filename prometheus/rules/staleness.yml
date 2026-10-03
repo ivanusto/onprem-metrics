@@ -1,0 +1,30 @@
+# Day 19 ships only "is the pipeline alive" rules. Thresholds on the
+# numbers themselves (soak, pool capacity, drill age) are Day 20.
+groups:
+  - name: pipeline
+    rules:
+      - alert: TargetDown
+        expr: up == 0
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.job }} {{ $labels.instance }} not scraped for 5m"}
+      - alert: Gb10TextfileStale
+        expr: time() - gb10_textfile_last_run_timestamp > 120
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: "gb10-textfile has not run on {{ $labels.instance }} for 2 minutes"}
+      - alert: NasTextfileStale
+        expr: time() - nas_textfile_last_run_timestamp > 600
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "nas-textfile for {{ $labels.nas }} is older than 10 minutes"}
+      - alert: NasUnreachable
+        expr: nas_up == 0
+        for: 5m
+        labels: {severity: critical}
+        annotations: {summary: "ssh or zfs failed on {{ $labels.nas }}"}
+      - alert: DrillsTextfileStale
+        expr: time() - drills_textfile_last_run_timestamp > 7200
+        for: 10m
+        labels: {severity: info}
+        annotations: {summary: "drills-textfile older than 2 hours"}
