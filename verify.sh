@@ -2,7 +2,7 @@
 # verify: is every target up, how long do scrapes take, and does one
 # number per source match the tool it came from. Prints Markdown.
 #
-#   PROM=http://192.168.2.49:9090 ./verify.sh [--gb10 user@ip] [--nas LABEL=user@ip] [--pve user@ip]
+#   PROM=http://localhost:9090 ./verify.sh [--gb10 user@ip] [--nas LABEL=user@ip] [--pve user@ip]
 #
 # --gb10 and --nas may be given more than once. Use the address that is in
 # the target files: gb10 series carry node="<ip>" and SNMP series carry

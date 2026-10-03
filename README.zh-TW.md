@@ -11,10 +11,13 @@
 | `textfile/nas-textfile.sh` | 收集端主機，cron 每分鐘 | 參數是 `LABEL=user@host`，`nas` 標籤與 SNMP 目標的 `nas` 對得起來。經 ssh 到每台 NAS，只收 MIB 沒有的東西，依名稱列的 ZFS 池、資料集已用、每資料集快照數與最新最舊時間與佔用、HBS 3 是否安裝。NAS 上不裝任何東西 |
 | `textfile/drills-textfile.py` | 收集端主機，cron 每 15 分鐘 | 讀 pve-backup-drill、nas-backup-drill、cloud-offload-drill 的 `drills.jsonl`，每個演練標籤只留最近一次，時間、結果、RTO、RPO、速率、最近一次成功 |
 | `prometheus/` | 收集端 VM | `prometheus.yml` 三種間隔（GPU 節點 15 秒，NAS 與 PVE 60 秒），file_sd 目標檔（`.example` 入庫，真實檔忽略），pve-exporter 的 `pve.yml.example`，`rules/staleness.yml` 的管線存活告警 |
-| `docker-compose.yml` | 收集端 VM | Prometheus 3.5 保留 90 天，加 pve-exporter 與 snmp-exporter，映像以 digest 釘住。兩個 exporter 只發佈到 127.0.0.1，方便在主機上 curl 除錯 |
+| `docker-compose.yml` | 收集端 VM | Prometheus 3.5 保留 90 天，加 pve-exporter、snmp-exporter、Alertmanager 與 Grafana，映像以 digest 釘住。對區網只開 Grafana 的 3000，Prometheus、Alertmanager 與 exporter 都只發佈到 127.0.0.1 |
 | `systemd/` | DGX Spark 與收集端 | node_exporter 單元、gb10-textfile 的 service 與 timer、收集端的 cron.d |
 | `install-node.sh` | 每台 DGX Spark；`--collector` 給收集端 | 下載 node_exporter（arm64 或 amd64），對 release 的 sha256 校驗，安裝單元。DGX Spark 模式另裝 gb10-textfile 與 `/run/gb10`（tmpfiles.d）；`--collector` 只裝 node_exporter 與 textfile 目錄 |
 | `verify.sh` | 任何有 curl、ssh 與 python3 的機器 | 每個目標的 `up`、抓取秒數與樣本數，每個來源一個 Prometheus 的值與原始工具的值並列，演練表。NAS 端只用一般帳號讀得到的來源（`getsysinfo` 的溫度要 root） |
+| `prometheus/rules/thresholds.yml` | 收集端 VM | 數值告警（Day 20）。soak 超過 200 秒（守護 240 秒動手，扣掉 textfile、抓取與規則評估的相位差；gb10 群組因此每 15 秒評估一次）、MemAvailable 6 與 3 GiB、`NV_ERR_NO_MEMORY` 增量、儲存池 80 與 90 %、QuTS hero 回報的池與磁碟狀態字串、快照逾 2 天、失去法定人數與少一票、HA 資源異常、演練逾期與失敗。每個門檻都寫出處 |
+| `textfile/pve-quorum-textfile.sh` | 收集端主機，cron 每分鐘 | 參數 `LABEL=root@節點1,root@節點2`，ssh 到第一台有回應的節點跑 `pvecm status`，輸出 expected、total、quorum 票數、Quorate 旗標、QDevice 票與各節點票。金鑰在節點上以 `from=` 與 `command="/usr/bin/pvecm status",restrict` 限定 |
+| `alertmanager/`、`grafana/` | 收集端 VM | Alertmanager 路由（critical 立即、warning 30 秒一批、info 每日彙整、soak 告警不等批次）與七條 inhibit，管線死掉時不會連帶對每個停止回報的數值告警。Grafana 以 provisioning 載入資料源與一面儀表板，JSON 由 `build-dashboard.py` 產生，UI 改不了 |
 | `tests/` | CI | 假的 sysfs、nvidia-smi、dmesg、zfs、zpool、getsysinfo，每份輸出都過 `promtool check metrics` |
 
 ## 為什麼硬體走 SNMP、ZFS 走 ssh
@@ -42,6 +45,19 @@ docker compose up -d
 sudo ./install-node.sh --collector
 sudo install -m 0644 systemd/collector.cron /etc/cron.d/onprem-metrics    # 改主機與路徑
 
+# 告警與儀表板（Day 20）
+cp alertmanager/alertmanager.yml.example alertmanager/alertmanager.yml    # 填 SMTP
+openssl rand -base64 24 > grafana/admin_password
+sudo chown 472:0 grafana/admin_password && sudo chmod 0440 grafana/admin_password   # Grafana 以 uid 472、gid 0 執行
+docker compose up -d
+# Grafana 只在建立資料庫那一次讀密碼。第一次啟動時檔案讀不到，管理密碼就是 admin，
+# 改好擁有者之後要 `docker compose rm -sf grafana && docker volume rm <專案>_grafana-data` 重建。
+
+# PVE 票數：在一台節點的 /root/.ssh/authorized_keys 加一行（它就是叢集共用的
+# /etc/pve/priv/authorized_keys）
+#   from="收集端IP",command="/usr/bin/pvecm status",restrict ssh-ed25519 AAAA... metrics@collector
+sudo -u metrics ./textfile/pve-quorum-textfile.sh lab=root@192.168.2.9,root@192.168.2.5 | promtool check metrics
+
 # 第一次 SNMP 抓取，看實機有哪些 OID 回值
 curl 'http://localhost:9116/snmp?module=qnap&auth=nas_v3&target=192.168.2.2'
 
@@ -51,7 +67,8 @@ sudo ufw allow proto tcp from 192.168.2.49 to any port 9100   # 只放收集端
 curl -s localhost:9100/metrics | grep ^gb10_
 
 # 然後
-PROM=http://192.168.2.49:9090 ./verify.sh \
+# Day 20 起 Prometheus 只聽 127.0.0.1，在收集端上跑；要從別台跑，先 ssh -L 9090:localhost:9090 到收集端
+./verify.sh \
   --gb10 user@192.168.2.131 --gb10 user@192.168.2.141 \
   --nas primary=claude@192.168.2.2 --nas secondary=claude@192.168.2.22 \
   --pve root@192.168.2.9 > verify.md
@@ -62,8 +79,11 @@ PROM=http://192.168.2.49:9090 ./verify.sh \
 ```sh
 python3 -m unittest discover -s tests
 sh tests/fake-nas.sh
-shellcheck textfile/nas-textfile.sh verify.sh install-node.sh tests/fake-nas.sh
-promtool check config prometheus/prometheus.yml && promtool check rules prometheus/rules/staleness.yml
+shellcheck textfile/nas-textfile.sh textfile/pve-quorum-textfile.sh verify.sh install-node.sh tests/fake-nas.sh
+promtool check config prometheus/prometheus.yml && promtool check rules prometheus/rules/*.yml
+(cd tests && promtool test rules rules_test.yml)
+amtool check-config alertmanager/alertmanager.yml.example
+python3 grafana/build-dashboard.py --check
 snmp_exporter --config.file=prometheus/snmp.yml --config.file=prometheus/snmp-auth.yml.example --dry-run
 ```
 

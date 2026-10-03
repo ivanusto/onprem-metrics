@@ -18,9 +18,15 @@ jobs:
         run: |
           curl -fsSL -o p.tgz https://github.com/prometheus/prometheus/releases/download/v3.5.0/prometheus-3.5.0.linux-amd64.tar.gz
           tar xzf p.tgz && sudo install -m 0755 prometheus-3.5.0.linux-amd64/promtool /usr/local/bin/promtool
-      - run: shellcheck textfile/nas-textfile.sh verify.sh install-node.sh tests/fake-nas.sh
+      - run: shellcheck textfile/nas-textfile.sh textfile/pve-quorum-textfile.sh verify.sh install-node.sh tests/fake-nas.sh
       - run: promtool check config prometheus/prometheus.yml
-      - run: promtool check rules prometheus/rules/staleness.yml
+      - run: promtool check rules prometheus/rules/staleness.yml prometheus/rules/thresholds.yml
+      - run: cd tests && promtool test rules rules_test.yml
+      - name: amtool check-config
+        run: |
+          curl -fsSL -o a.tgz https://github.com/prometheus/alertmanager/releases/download/v0.28.1/alertmanager-0.28.1.linux-amd64.tar.gz
+          tar xzf a.tgz && ./alertmanager-0.28.1.linux-amd64/amtool check-config alertmanager/alertmanager.yml.example
+      - run: python3 grafana/build-dashboard.py --check
       - name: snmp_exporter dry-run
         run: |
           curl -fsSL -o s.tgz https://github.com/prometheus/snmp_exporter/releases/download/v0.29.0/snmp_exporter-0.29.0.linux-amd64.tar.gz
