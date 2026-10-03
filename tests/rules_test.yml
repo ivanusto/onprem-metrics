@@ -1,6 +1,9 @@
 # promtool test rules tests/rules_test.yml
 # Each case feeds a synthetic series and asserts which alert fires when.
 # Scrape interval below matches gb10 (15 s); NAS/PVE/drill cases use 60 s.
+# promtool steps every group at this evaluation_interval and ignores the
+# group's own interval, so it cannot see that prometheus.yml evaluates at
+# 60 s. tests/test_rules_config.py checks the gb10 group's 15 s instead.
 rule_files:
   - ../prometheus/rules/thresholds.yml
   - ../prometheus/rules/staleness.yml
@@ -133,7 +136,7 @@ tests:
       - eval_time: 1m
         alertname: PveQuorumLost
         exp_alerts:
-          - exp_labels: {severity: critical, job: pve, instance: "192.168.2.9", id: "cluster/lab"}
+          - exp_labels: {severity: critical, job: pve, id: "cluster/lab"}
             exp_annotations: {summary: "cluster cluster/lab not quorate, HA nodes will self-fence (Day 15 drill 3)"}
 
   # Drill freshness: a pve drill that last passed 31 days ago.
@@ -154,3 +157,80 @@ tests:
         exp_alerts:
           - exp_labels: {severity: warning, job: collector-host, source: pve, label: d3-full}
             exp_annotations: {summary: "last pve drill d3-full failed"}
+
+  # Status strings as the field NAS report them (first walk, Day 19).
+  # Disks say "Good", pools "ready" under an _info metric, Telnet "no",
+  # and the UPS string is "-1" when no UPS is attached.
+  - interval: 1m
+    input_series:
+      - series: 'qnap_disk_status{job="nas-snmp",instance="192.168.2.2",nas="primary",diskIndex="1",diskModel="m1",qnap_disk_status="Good"}'
+        values: "1x10"
+      - series: 'qnap_disk_status{job="nas-snmp",instance="192.168.2.2",nas="primary",diskIndex="2",diskModel="m2",qnap_disk_status="Warning"}'
+        values: "1x10"
+      - series: 'qnap_pool_status_info{job="nas-snmp",instance="192.168.2.2",nas="primary",storagepoolID="1",qnap_pool_status="ready"}'
+        values: "1x10"
+      - series: 'qnap_ups_status{job="nas-snmp",instance="192.168.2.2",nas="primary",qnap_ups_status="-1"}'
+        values: "1x10"
+      - series: 'qnap_service_telnet_enabled_info{job="nas-snmp",instance="192.168.2.2",nas="primary",qnap_service_telnet_enabled="no"}'
+        values: "1x10"
+      - series: 'qnap_service_telnet_enabled_info{job="nas-snmp",instance="192.168.2.22",nas="secondary",qnap_service_telnet_enabled="yes"}'
+        values: "1x10"
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: NasDiskNotGood
+        exp_alerts:
+          - exp_labels: {severity: critical, job: nas-snmp, instance: "192.168.2.2", nas: primary, diskIndex: "2", diskModel: m2, qnap_disk_status: Warning}
+            exp_annotations: {summary: "primary disk 2 m2 is Warning"}
+      - eval_time: 6m
+        alertname: NasPoolStatusNotReady
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: NasUpsNotOnline
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: NasTelnetEnabled
+        exp_alerts:
+          - exp_labels: {severity: warning, job: nas-snmp, instance: "192.168.2.22", nas: secondary, qnap_service_telnet_enabled: "yes"}
+            exp_annotations: {summary: "secondary has Telnet enabled (Day 11 hardening regression)"}
+
+  # pve-exporter is scraped through both nodes; one storage down is one
+  # alert, not two.
+  - interval: 1m
+    input_series:
+      - series: 'pve_up{job="pve",instance="192.168.2.9",id="storage/n1/pbs"}'
+        values: "0x5"
+      - series: 'pve_up{job="pve",instance="192.168.2.5",id="storage/n1/pbs"}'
+        values: "0x5"
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: PveStorageUnavailable
+        exp_alerts:
+          - exp_labels: {severity: critical, job: pve, id: "storage/n1/pbs"}
+            exp_annotations: {summary: "storage/n1/pbs unavailable (NFS on the NAS?)"}
+
+  # The 900 s RTO target is for PVE restores; a long cloud upload is not
+  # a missed target.
+  - interval: 1m
+    input_series:
+      - series: 'drill_last_rto_seconds{job="collector-host",source="cloud",label="1c-upload"}'
+        values: "15842x3"
+      - series: 'drill_last_rto_seconds{job="collector-host",source="pve",label="d3-full"}'
+        values: "1000x3"
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: DrillRtoOverTarget
+        exp_alerts:
+          - exp_labels: {severity: info, job: collector-host, source: pve, label: d3-full}
+            exp_annotations: {summary: "pve drill d3-full RTO 1000 s, target 900 s"}
+
+  # The quorum textfile cannot reach any node.
+  - interval: 1m
+    input_series:
+      - series: 'pve_quorum_up{job="collector-host",cluster="lab"}'
+        values: "0x8"
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: PveQuorumUnreadable
+        exp_alerts:
+          - exp_labels: {severity: warning, job: collector-host, cluster: lab}
+            exp_annotations: {summary: "pve-quorum-textfile cannot read pvecm status for lab on any listed node (key, from= or node down)"}

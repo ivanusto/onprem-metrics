@@ -37,3 +37,9 @@ groups:
         for: 10m
         labels: {severity: info}
         annotations: {summary: "drills-textfile older than 2 hours"}
+      # Day 20: pve-quorum-textfile runs from the collector's cron every minute.
+      - alert: PveQuorumTextfileStale
+        expr: time() - pve_quorum_textfile_last_run_timestamp > 300
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "pve-quorum-textfile has not run for 5 minutes, vote metrics are stale"}

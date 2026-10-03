@@ -1036,7 +1036,7 @@
    "id": 18,
    "type": "table",
    "title": "磁碟",
-   "description": "每顆磁碟的狀態字串與溫度。狀態字串不是 GOOD 時 NasDiskNotGood 會響",
+   "description": "每顆磁碟的狀態字串與溫度。狀態字串不是 Good 時 NasDiskNotGood 會響",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -1053,20 +1053,8 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "qnap_disk_status == 1",
+     "expr": "qnap_disk_temperature_celsius * on (instance, diskIndex) group_left (qnap_disk_status) (qnap_disk_status == 1)",
      "refId": "A",
-     "legendFormat": "__auto",
-     "instant": true,
-     "range": false,
-     "format": "table"
-    },
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "prometheus"
-     },
-     "expr": "qnap_disk_temperature_celsius",
-     "refId": "B",
      "legendFormat": "__auto",
      "instant": true,
      "range": false,
@@ -1083,7 +1071,7 @@
      {
       "matcher": {
        "id": "byName",
-       "options": "Value #B"
+       "options": "Value"
       },
       "properties": [
        {
@@ -1133,7 +1121,6 @@
      "options": {
       "excludeByName": {
        "Time": true,
-       "Value #A": true,
        "__name__": true,
        "job": true,
        "instance": true,
@@ -1692,7 +1679,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "pve_up{id=~\"node/.*\"}",
+     "expr": "max without (instance) (pve_up{id=~\"node/.*\"})",
      "refId": "A",
      "legendFormat": "{{id}}",
      "instant": true,
@@ -1757,7 +1744,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "pve_up{id=~\"storage/.*\"}",
+     "expr": "max without (instance) (pve_up{id=~\"storage/.*\"})",
      "refId": "A",
      "legendFormat": "{{id}}",
      "instant": true,
@@ -1822,7 +1809,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "pve_ha_state == 1",
+     "expr": "max without (instance) (pve_ha_state == 1)",
      "refId": "A",
      "legendFormat": "__auto",
      "instant": true,
@@ -1896,7 +1883,7 @@
    "id": 30,
    "type": "timeseries",
    "title": "執行中的 VM 數",
-   "description": "pve-exporter 兩個節點都回整座叢集，這裡以 instance 去重前先 count，兩條線應各自是常數。pve-exporter 的目標若有兩個，加 instance 過濾（Day 19）",
+   "description": "pve-exporter 兩個節點都回整座叢集，先去掉 instance 再 count，否則每台客體算兩次",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -1913,7 +1900,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "count(pve_up{id=~\"qemu/.*|lxc/.*\"} == 1)",
+     "expr": "count(max without (instance) (pve_up{id=~\"qemu/.*|lxc/.*\"}) == 1)",
      "refId": "A",
      "legendFormat": "running"
     },
@@ -1922,7 +1909,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "count(pve_up{id=~\"qemu/.*|lxc/.*\"})",
+     "expr": "count(max without (instance) (pve_up{id=~\"qemu/.*|lxc/.*\"}))",
      "refId": "B",
      "legendFormat": "defined"
     }
@@ -1975,7 +1962,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "pve_cpu_usage_ratio{id=~\"node/.*\"}",
+     "expr": "max without (instance) (pve_cpu_usage_ratio{id=~\"node/.*\"})",
      "refId": "A",
      "legendFormat": "{{id}}"
     }
@@ -2030,7 +2017,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "pve_memory_usage_bytes{id=~\"node/.*\"} / pve_memory_size_bytes{id=~\"node/.*\"}",
+     "expr": "max without (instance) (pve_memory_usage_bytes{id=~\"node/.*\"}) / max without (instance) (pve_memory_size_bytes{id=~\"node/.*\"})",
      "refId": "A",
      "legendFormat": "{{id}}"
     }
@@ -2085,7 +2072,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "sum(rate(pve_disk_read_bytes{id=~\"qemu/.*\"}[5m]))",
+     "expr": "sum(max without (instance) (rate(pve_disk_read_bytes{id=~\"qemu/.*\"}[5m])))",
      "refId": "A",
      "legendFormat": "read"
     },
@@ -2094,7 +2081,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "sum(rate(pve_disk_write_bytes{id=~\"qemu/.*\"}[5m]))",
+     "expr": "sum(max without (instance) (rate(pve_disk_write_bytes{id=~\"qemu/.*\"}[5m])))",
      "refId": "B",
      "legendFormat": "write"
     }
@@ -2213,7 +2200,7 @@
    "id": 36,
    "type": "table",
    "title": "最近一次演練",
-   "description": "結果、RTO、RPO、速率。RTO 目標 900 s（Day 16 量到 569 s）",
+   "description": "結果、RTO、RPO、速率。RTO 目標 900 s 只對 pve 演練（Day 16 量到 569 s），nas 與 cloud 的標籤含上傳與整個資料夾回復，量級不同",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"

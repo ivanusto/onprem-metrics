@@ -1,0 +1,29 @@
+Cluster information
+-------------------
+Name:             lab
+Config Version:   7
+Transport:        knet
+Secure auth:      on
+
+Quorum information
+------------------
+Date:             Sat Oct  3 15:34:21 2026
+Quorum provider:  corosync_votequorum
+Nodes:            2
+Node ID:          0x00000001
+Ring ID:          1.cae
+Quorate:          Yes
+
+Votequorum information
+----------------------
+Expected votes:   3
+Highest expected: 3
+Total votes:      2
+Quorum:           2  
+Flags:            Quorate 
+
+Membership information
+----------------------
+    Nodeid      Votes    Qdevice Name
+0x00000001          1    A,NV,NMW 192.168.2.9 (local)
+0x00000003          1    A,NV,NMW 192.168.2.5

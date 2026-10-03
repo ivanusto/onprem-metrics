@@ -42,10 +42,12 @@ services:
     ports: ["127.0.0.1:9116:9116"]
     restart: unless-stopped
 
-  # Day 20. Digests: run `docker buildx imagetools inspect IMAGE` on the
-  # collector and pin them the Day 3 way before the first `compose up`.
+  # Day 20. Pinned the Day 3 way, digests from `docker buildx imagetools
+  # inspect` (multi-arch index). Grafana ships as grafana/grafana; the
+  # grafana/grafana-oss repository has no plain 12.2.0 tag and stopped
+  # receiving releases, so this is the last 12.2 patch.
   alertmanager:
-    image: prom/alertmanager:v0.28.1
+    image: prom/alertmanager:v0.28.1@sha256:27c475db5fb156cab31d5c18a4251ac7ed567746a2483ff264516437a39b15ba
     command:
       - --config.file=/etc/alertmanager/alertmanager.yml
       - --storage.path=/alertmanager
@@ -57,7 +59,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana-oss:12.2.0
+    image: grafana/grafana:12.2.10@sha256:d2ac2dae86601550e941f7e1c0b4b7e1f21fadebfa5956ba06fe0b3a64de7cf4
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin

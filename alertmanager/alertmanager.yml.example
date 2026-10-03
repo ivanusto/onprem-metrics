@@ -1,6 +1,6 @@
 # Alertmanager for the collector VM. Copy to alertmanager.yml (gitignored)
 # and fill the SMTP block. One route tree, three ideas:
-#   critical pages now, warning batches for 10 minutes, info goes to a
+#   critical pages now, warning batches for 30 seconds, info goes to a
 #   daily digest; and an inhibit tree so a dead pipeline does not also
 #   page for every number it stopped reporting.
 global:
@@ -18,6 +18,11 @@ route:
   group_interval: 5m
   repeat_interval: 12h
   routes:
+    # The soak alert is a warning, but it is only useful before the guard
+    # acts (at most 40 s later), so it skips the 30 s batching.
+    - matchers: [alertname="Gb10SoakNearBudget"]
+      receiver: ops-warning
+      group_wait: 0s
     - matchers: [severity="critical"]
       receiver: ops-critical
       group_wait: 0s
@@ -54,7 +59,7 @@ inhibit_rules:
     target_matchers: [alertname=~"Nas(Pool|Snapshot).*"]
     equal: [nas]
   - source_matchers: [alertname="NasSnmpNoData"]
-    target_matchers: [alertname=~"Nas(Disk|UPS|Telnet|PoolStatus).*"]
+    target_matchers: [alertname=~"Nas(Disk|Ups|Telnet|PoolStatus).*"]
     equal: [instance]
   # Quorum lost already says everything PveVoteMissing and PveQdeviceAbsent would.
   - source_matchers: [alertname="PveQuorumLost"]

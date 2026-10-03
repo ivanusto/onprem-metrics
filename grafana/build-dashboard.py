@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build grafana/dashboards/onprem-overview.json.
 
-One dashboard, five rows, each row answers one question an operator asks
+One dashboard, six rows, each row answers one question an operator asks
 when paged at 03:00. The JSON is generated so thresholds stay in one place
 and match prometheus/rules/thresholds.yml: edit this file, run it, commit
 both. Grafana loads the JSON through provisioning with allowUiUpdates=false.
@@ -12,6 +12,10 @@ both. Grafana loads the JSON through provisioning with allowUiUpdates=false.
 import json, os, sys
 
 DS = {"type": "prometheus", "uid": "prometheus"}
+# pve-exporter is scraped through both nodes and each reports the whole
+# cluster; every PVE query drops the instance label so a VM is one row.
+def pve(expr, agg="max"):
+    return f"{agg} without (instance) ({expr})"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dashboards", "onprem-overview.json")
 
 # Thresholds shared with prometheus/rules/thresholds.yml
@@ -165,12 +169,14 @@ def build():
                 unit="celsius", lines=((DISK_TEMP_WARN, "orange"),), minv=20, maxv=70,
                 desc="SNMP 的 diskTemperature，每台 NAS 取最高那顆"))
     y += 7
+    # One query: temperature as the value, the status string joined in as a
+    # label. Two queries merged would need identical label sets.
     P.append(table("磁碟", 0, y, 12, 8,
-                   [target("qnap_disk_status == 1", instant=True, fmt="table"),
-                    target("qnap_disk_temperature_celsius", instant=True, fmt="table")],
-                   desc="每顆磁碟的狀態字串與溫度。狀態字串不是 GOOD 時 NasDiskNotGood 會響",
-                   overrides=[color_cell("Value #B", steps((None, "green"), (DISK_TEMP_WARN, "orange")), "celsius")],
-                   hide=("Time", "Value #A", "__name__", "job", "instance", "site", "diskSerialNumber")))
+                   [target("qnap_disk_temperature_celsius * on (instance, diskIndex) group_left (qnap_disk_status) (qnap_disk_status == 1)",
+                           instant=True, fmt="table")],
+                   desc="每顆磁碟的狀態字串與溫度。狀態字串不是 Good 時 NasDiskNotGood 會響",
+                   overrides=[color_cell("Value", steps((None, "green"), (DISK_TEMP_WARN, "orange")), "celsius")],
+                   hide=("Time", "__name__", "job", "instance", "site", "diskSerialNumber")))
     P.append(table("快照", 12, y, 12, 8,
                    [target("nas_zfs_snapshots", instant=True, fmt="table"),
                     target("(time() - nas_zfs_snapshot_newest_timestamp) / 86400", instant=True, fmt="table"),
@@ -201,30 +207,30 @@ def build():
     P.append(stat("QDevice 票", 8, y, 4, 5, "pve_quorum_qdevice_votes", "{{cluster}}",
                   thresholds=steps((None, "orange"), (1, "green")), decimals=0,
                   desc="0 多半是 NAS 重開中，Virtualization Station 上的 qnetd 還沒回來"))
-    P.append(stat("節點", 12, y, 6, 5, 'pve_up{id=~"node/.*"}', "{{id}}",
+    P.append(stat("節點", 12, y, 6, 5, pve('pve_up{id=~"node/.*"}'), "{{id}}",
                   thresholds=steps((None, "red"), (1, "green")), decimals=0))
-    P.append(stat("儲存", 18, y, 6, 5, 'pve_up{id=~"storage/.*"}', "{{id}}",
+    P.append(stat("儲存", 18, y, 6, 5, pve('pve_up{id=~"storage/.*"}'), "{{id}}",
                   thresholds=steps((None, "red"), (1, "green")), decimals=0,
                   desc="NFS 資料存放區在 NAS 重開時會變 0，約 8 分鐘（Day 15 演練 1）"))
     y += 5
     P.append(table("HA 資源", 0, y, 12, 7,
-                   [target("pve_ha_state == 1", instant=True, fmt="table")],
+                   [target(pve("pve_ha_state == 1"), instant=True, fmt="table")],
                    desc="每個 HA 管理的客體目前的狀態。started 以外的狀態都值得看一眼，error、fence、recovery 會響",
                    overrides=[color_cell("state", steps((None, "orange")))],
                    hide=("Time", "Value", "__name__", "job", "instance", "site")))
     P.append(ts("執行中的 VM 數", 12, y, 12, 7,
-                [target('count(pve_up{id=~"qemu/.*|lxc/.*"} == 1)', "running"),
-                 target('count(pve_up{id=~"qemu/.*|lxc/.*"})', "defined")],
-                desc="pve-exporter 兩個節點都回整座叢集，這裡以 instance 去重前先 count，兩條線應各自是常數。pve-exporter 的目標若有兩個，加 instance 過濾（Day 19）",
+                [target('count(' + pve('pve_up{id=~"qemu/.*|lxc/.*"}') + ' == 1)', "running"),
+                 target('count(' + pve('pve_up{id=~"qemu/.*|lxc/.*"}') + ')', "defined")],
+                desc="pve-exporter 兩個節點都回整座叢集，先去掉 instance 再 count，否則每台客體算兩次",
                 minv=0))
     y += 7
-    P.append(ts("節點 CPU", 0, y, 8, 6, [target('pve_cpu_usage_ratio{id=~"node/.*"}', "{{id}}")], unit="percentunit", minv=0, maxv=1))
+    P.append(ts("節點 CPU", 0, y, 8, 6, [target(pve('pve_cpu_usage_ratio{id=~"node/.*"}'), "{{id}}")], unit="percentunit", minv=0, maxv=1))
     P.append(ts("節點記憶體", 8, y, 8, 6,
-                [target('pve_memory_usage_bytes{id=~"node/.*"} / pve_memory_size_bytes{id=~"node/.*"}', "{{id}}")],
+                [target(pve('pve_memory_usage_bytes{id=~"node/.*"}') + " / " + pve('pve_memory_size_bytes{id=~"node/.*"}'), "{{id}}")],
                 unit="percentunit", minv=0, maxv=1))
     P.append(ts("客體磁碟 I/O", 16, y, 8, 6,
-                [target('sum(rate(pve_disk_read_bytes{id=~"qemu/.*"}[5m]))', "read"),
-                 target('sum(rate(pve_disk_write_bytes{id=~"qemu/.*"}[5m]))', "write")],
+                [target('sum(' + pve('rate(pve_disk_read_bytes{id=~"qemu/.*"}[5m])') + ')', "read"),
+                 target('sum(' + pve('rate(pve_disk_write_bytes{id=~"qemu/.*"}[5m])') + ')', "write")],
                 unit="Bps"))
     y += 6
 
@@ -240,7 +246,7 @@ def build():
                     target("drill_last_rto_seconds", instant=True, fmt="table"),
                     target("drill_last_rpo_seconds", instant=True, fmt="table"),
                     target("drill_last_rate_mib_per_second", instant=True, fmt="table")],
-                   desc=f"結果、RTO、RPO、速率。RTO 目標 {RTO_TARGET} s（Day 16 量到 569 s）",
+                   desc=f"結果、RTO、RPO、速率。RTO 目標 {RTO_TARGET} s 只對 pve 演練（Day 16 量到 569 s），nas 與 cloud 的標籤含上傳與整個資料夾回復，量級不同",
                    overrides=[color_cell("Value #A", steps((None, "red"), (1, "green"))),
                               color_cell("Value #B", steps((None, "green"), (RTO_TARGET, "orange")), "s"),
                               {"matcher": {"id": "byName", "options": "Value #C"}, "properties": [{"id": "unit", "value": "s"}]},
