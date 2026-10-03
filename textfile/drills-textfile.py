@@ -2,15 +2,18 @@
 """Turn the drills.jsonl files from Day 16, 17 and 18 into textfile metrics.
 
 Each drill repo appends one JSON object per drill. The three formats differ
-a little (restore-drill.sh from pve-backup-drill and nas-backup-drill, and
-offload-drill.sh from cloud-offload-drill), so this script normalises them:
+a little, so this script normalises them:
 
-    label    the drill name as written in the log
-    t0       ISO UTC when the drill started
-    result   OK or FAIL
-    rto      seconds, or missing
-    rpo      seconds, or missing
-    rate     MiB/s, or missing
+    field    pve-backup-drill   nas-backup-drill   cloud-offload-drill
+    label    label              label              label
+    t0       t0 (ISO UTC)       t0                 t0
+    result   result OK/FAIL     result             result
+    rto      rto_s (int)        rto ("69", "-")    seconds (int)
+    rpo      rpo_s ("784")      rpo                rpo ("-")
+    rate     -                  rate_mbs ("297")   rate ("58.2 MiB/s")
+
+The JSONL is what the tool printed at the time. Corrections made by hand
+later in each repo's drill-log.md do not flow back here.
 
 For every (source, label) it exposes the most recent drill only. A
 dashboard then shows "last successful restore N days ago" per drill and
@@ -63,6 +66,13 @@ def num(v):
         return None
 
 
+def first(rec, *keys):
+    for k in keys:
+        if k in rec:
+            return rec[k]
+    return None
+
+
 def normalise(rec):
     t0 = parse_t0(rec.get("t0"))
     if t0 is None:
@@ -72,8 +82,8 @@ def normalise(rec):
         "label": str(rec.get("label", "")).strip() or "unlabeled",
         "t0": t0,
         "ok": 1 if str(rec.get("result", "")).upper() == "OK" else 0,
-        "rto": num(rec.get("rto", rec.get("seconds"))),
-        "rpo": num(rec.get("rpo")),
+        "rto": num(first(rec, "rto", "rto_s", "seconds")),
+        "rpo": num(first(rec, "rpo", "rpo_s")),
         "rate": num(rate),
     }
 

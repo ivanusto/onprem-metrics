@@ -145,28 +145,35 @@ class Drills(unittest.TestCase):
         return p
 
     def test_three_formats(self):
+        # one line of each, copied from the drills.jsonl the three tools wrote
         pve = self.write("pve.jsonl", [
-            {"t0": "2026-09-30T15:47:06Z", "label": "3. 完整還原", "vmid": "104", "rto": "569", "rpo": "784", "result": "OK"},
-            {"t0": "2026-09-30T15:08:44Z", "label": "1. 即時還原", "rto": "-", "rpo": "222", "result": "FAIL"},
+            {"t0": "2026-09-30T15:47:06Z", "label": "d3-full", "vmid": "104", "ip": "192.168.2.49", "restore_point": "2026-09-30T15:34:02Z", "t_exists": 23, "t_running": 557, "t_ping": 568, "t_ssh": 568, "rto_s": 569, "rpo_s": "784", "result": "OK", "host": "spark1"},
+            {"t0": "2026-09-30T15:08:44Z", "label": "d1-instant", "vmid": "vs", "restore_point": "2026-09-30T15:05:02Z", "t_exists": None, "t_running": None, "t_ping": 0, "t_ssh": 0, "rto_s": 0, "rpo_s": "", "result": "FAIL", "host": "x"},
         ])
         nas = self.write("nas.jsonl", [
-            {"t0": "2026-10-01T14:22:55Z", "label": "3. 次要 NAS 逆向拉回", "rto": "684", "rpo": "534", "rate_mbs": "47.7", "result": "OK", "code": 0},
+            {"t0": "2026-10-01T14:22:55Z", "label": "3. 從次要 NAS 還原回主 NAS", "path": "/mnt/drill/canary", "kind": "frozen", "restore_point": "2026-10-01T14:14:01Z", "appear": "68", "canary": "99", "manifest": "99", "rto": "-", "rpo": "534", "payload": "ok", "size_mb": 55, "rate_mbs": "-", "result": "FAIL", "code": 4},
+            {"t0": "2026-10-01T13:30:25Z", "label": "2. 整個共享資料夾回復到快照", "rto": "1198", "rpo": "1799", "rate_mbs": "17", "result": "OK", "code": 0},
         ])
         cloud = self.write("cloud.jsonl", [
             {"t0": "2026-10-01T23:43:59Z", "label": "2. 還原 Music", "mib": 4808, "seconds": 92, "rate": "52 MiB/s", "rpo": "-", "result": "OK"},
             {"t0": "2026-10-01T17:38:09Z", "label": "2. 還原 Music", "mib": 100, "seconds": 500, "rate": "1 MiB/s", "result": "FAIL"},
         ])
         text = drills.render([("pve", pve), ("nas", nas), ("cloud", cloud)], 1_800_000_000)
-        self.assertIn('drill_last_rto_seconds{source="pve",label="3. 完整還原"} 569', text)
-        self.assertIn('drill_last_result{source="pve",label="1. 即時還原"} 0', text)
-        self.assertNotIn('drill_last_rto_seconds{source="pve",label="1. 即時還原"}', text)
-        self.assertIn('drill_last_rate_mib_per_second{source="nas",label="3. 次要 NAS 逆向拉回"} 47.7', text)
+        # pve-backup-drill writes rto_s / rpo_s
+        self.assertIn('drill_last_rto_seconds{source="pve",label="d3-full"} 569', text)
+        self.assertIn('drill_last_rpo_seconds{source="pve",label="d3-full"} 784', text)
+        self.assertIn('drill_last_result{source="pve",label="d1-instant"} 0', text)
+        self.assertNotIn('drill_last_success_timestamp{source="pve",label="d1-instant"}', text)
+        # nas-backup-drill writes "-" for what it could not measure
+        self.assertIn('drill_last_result{source="nas",label="3. 從次要 NAS 還原回主 NAS"} 0', text)
+        self.assertNotIn('drill_last_rto_seconds{source="nas",label="3. 從次要 NAS 還原回主 NAS"}', text)
+        self.assertIn('drill_last_rpo_seconds{source="nas",label="3. 從次要 NAS 還原回主 NAS"} 534', text)
+        self.assertIn('drill_last_rate_mib_per_second{source="nas",label="2. 整個共享資料夾回復到快照"} 17', text)
         # cloud: latest record wins, seconds maps to rto, rate parsed from "52 MiB/s"
         self.assertIn('drill_last_rto_seconds{source="cloud",label="2. 還原 Music"} 92', text)
         self.assertIn('drill_last_rate_mib_per_second{source="cloud",label="2. 還原 Music"} 52', text)
         self.assertIn('drill_count_total{source="cloud",label="2. 還原 Music"} 2', text)
         self.assertIn('drill_last_success_timestamp{source="cloud",label="2. 還原 Music"} %d' % drills.parse_t0("2026-10-01T23:43:59Z"), text)
-        self.assertNotIn('drill_last_success_timestamp{source="pve",label="1. 即時還原"}', text)
         ok, msg = promtool_ok(text)
         self.assertTrue(ok, msg)
 

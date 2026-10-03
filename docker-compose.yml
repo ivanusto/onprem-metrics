@@ -23,7 +23,9 @@ services:
     image: prompve/prometheus-pve-exporter:3.5.5
     volumes:
       - ./prometheus/pve.yml:/etc/prometheus/pve.yml:ro
-    expose: ["9221"]
+    # loopback only: Prometheus reaches it over the compose network, and the
+    # host can curl it for debugging without exposing it to the LAN
+    ports: ["127.0.0.1:9221:9221"]
     restart: unless-stopped
 
   snmp-exporter:
@@ -34,7 +36,9 @@ services:
     volumes:
       - ./prometheus/snmp.yml:/etc/snmp_exporter/snmp.yml:ro
       - ./prometheus/snmp-auth.yml:/etc/snmp_exporter/snmp-auth.yml:ro
-    expose: ["9116"]
+    # loopback only, so the first walk can be read with
+    # curl 'http://localhost:9116/snmp?module=qnap&auth=nas_v3&target=...'
+    ports: ["127.0.0.1:9116:9116"]
     restart: unless-stopped
 
 volumes:

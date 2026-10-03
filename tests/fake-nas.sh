@@ -43,7 +43,25 @@ if command -v promtool >/dev/null 2>&1; then
   if promtool check metrics < "$T/nas.prom" >/dev/null 2>&1; then pass=$((pass+1)); echo "ok   promtool check metrics"; else fail=$((fail+1)); echo "FAIL promtool"; promtool check metrics < "$T/nas.prom"; fi
 fi
 # unreachable host path: ssh to a bogus host prints nas_up 0
-out2=$("$HERE/textfile/nas-textfile.sh" primary nobody@127.0.0.1 2>/dev/null || true)
+out2=$("$HERE/textfile/nas-textfile.sh" primary=nobody@127.0.0.1 2>/dev/null || true)
 if printf '%s\n' "$out2" | grep -q '^nas_up{nas="primary"} 0$'; then pass=$((pass+1)); echo "ok   unreachable host reports nas_up 0"; else fail=$((fail+1)); echo "FAIL unreachable"; fi
+# two NAS through a fake ssh that runs the piped script locally: labels come
+# from LABEL=, and every family is one contiguous block with one HELP line
+cat > "$T/bin/ssh" <<'EOT'
+#!/bin/sh
+while [ $# -gt 0 ]; do case "$1" in -o) shift 2 ;; sh) shift 2; break ;; *) shift ;; esac; done
+exec sh -s "$@"
+EOT
+chmod +x "$T/bin/ssh"
+out3=$(PATH="$T/bin:$PATH" "$HERE/textfile/nas-textfile.sh" primary=claude@nas1 secondary=claude@nas2)
+printf '%s\n' "$out3" > "$T/two.prom"
+out=$out3
+check "second NAS keeps its label" '^nas_up{nas="secondary"} 1$'
+if [ "$(printf '%s\n' "$out3" | grep -c '^# HELP nas_up ')" = 1 ]; then pass=$((pass+1)); echo "ok   one HELP per family"; else fail=$((fail+1)); echo "FAIL HELP repeated"; fi
+if printf '%s\n' "$out3" | grep -v '^#' | sed 's/[{ ].*//' | uniq | sort | uniq -d | grep -q .; then fail=$((fail+1)); echo "FAIL family not contiguous"; else pass=$((pass+1)); echo "ok   families contiguous"; fi
+if command -v promtool >/dev/null 2>&1; then
+  if promtool check metrics < "$T/two.prom" >/dev/null 2>&1; then pass=$((pass+1)); echo "ok   promtool two NAS"; else fail=$((fail+1)); echo "FAIL promtool two NAS"; promtool check metrics < "$T/two.prom"; fi
+fi
+if "$HERE/textfile/nas-textfile.sh" claude@nas1 >/dev/null 2>&1; then fail=$((fail+1)); echo "FAIL bare user@host accepted"; else pass=$((pass+1)); echo "ok   bare user@host rejected"; fi
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

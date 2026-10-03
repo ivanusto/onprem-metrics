@@ -1,22 +1,22 @@
 #!/bin/sh
-# nas-textfile: QuTS hero pools, datasets, snapshots, HBS 3 jobs and disk
-# temperatures as node_exporter textfile metrics, collected over ssh.
+# nas-textfile: what the QTS MIB does not have (ZFS pools by name, datasets,
+# snapshots, HBS 3) as node_exporter textfile metrics, collected over ssh.
 #
-# QNAP has no node_exporter and SNMP is off in this lab, so one Linux host
-# runs this from cron for every NAS and exposes the result through its own
+# QNAP has no node_exporter, so one Linux host (the collector VM) runs this
+# from cron for every NAS and exposes the result through its own
 # node_exporter. Same approach as nas-audit.sh (Day 17): the script is piped
 # to the remote sh, nothing is copied to the NAS, a non-root key is enough
 # for zfs/zpool. Hardware (disk temperature, SMART, fans, pools by SNMP
-# index) comes from snmp_exporter instead; this script is only for what
-# the QTS MIB does not have: ZFS datasets, snapshots and HBS 3.
+# index) comes from snmp_exporter instead.
 #
-#   nas-textfile.sh NAS_LABEL user@host [user@host2 ...] > /var/lib/node_exporter/textfile/nas.prom
-#   NAS_TEXTFILE_LOCAL=1 nas-textfile.sh NAS_LABEL                    # on the NAS itself
+#   nas-textfile.sh LABEL=user@host [LABEL=user@host ...] > nas.prom
+#   NAS_TEXTFILE_LOCAL=1 nas-textfile.sh LABEL              # on the NAS itself
 #
-# Each host's output is tagged nas="LABEL"; the label for the second and
-# later hosts is taken from the host part of user@host. Output is written
-# to stdout so cron can redirect it atomically through a temp file (see
-# systemd/nas-textfile.sh wrapper).
+# Use the same LABEL as the nas: label in targets/nas-snmp.yml so the SNMP
+# and ssh series of one NAS join on nas="LABEL". Output goes to stdout;
+# cron writes it through a temp file and mv (see systemd/collector.cron).
+# Samples of every host are regrouped per metric family, because the text
+# format wants one contiguous block per metric name.
 #
 # Metrics (all gauges unless noted)
 #   nas_up{nas}                               1 when ssh and zfs answered, 0 otherwise
@@ -25,12 +25,11 @@
 #   nas_zpool_capacity_percent{nas,pool}
 #   nas_zpool_health{nas,pool,state}          1 for the current state
 #   nas_zfs_used_bytes{nas,dataset}           zfs list -p, filesystems and volumes
-#   nas_zfs_snapshots{nas,dataset}       excluding :init:
+#   nas_zfs_snapshots{nas,dataset}           excluding :init:
 #   nas_zfs_snapshot_newest_timestamp{nas,dataset}
 #   nas_zfs_snapshot_oldest_timestamp{nas,dataset}
 #   nas_zfs_snapshot_used_bytes{nas,dataset}
 #   nas_hbs_installed{nas}                    1 when HybridBackup is in qpkg.conf
-#   nas_hbs_job_last_result{nas,job,result}   1 for the last result (待查: log path)
 #   nas_textfile_last_run_timestamp{nas}
 set -eu
 
@@ -76,47 +75,40 @@ printf "nas_textfile_last_run_timestamp{nas=\"%s\"} %s\n" "$L" "$now"
 exit 0
 '
 
-header() {
-  cat <<'EOF'
-# HELP nas_up 1 when ssh and zfs answered
-# TYPE nas_up gauge
-# HELP nas_zpool_size_bytes Pool size
-# TYPE nas_zpool_size_bytes gauge
-# HELP nas_zpool_alloc_bytes Pool allocated bytes
-# TYPE nas_zpool_alloc_bytes gauge
-# HELP nas_zpool_capacity_percent Pool capacity used, percent
-# TYPE nas_zpool_capacity_percent gauge
-# HELP nas_zpool_health 1 for the current pool state
-# TYPE nas_zpool_health gauge
-# HELP nas_zfs_used_bytes Dataset used bytes
-# TYPE nas_zfs_used_bytes gauge
-# HELP nas_zfs_snapshots Snapshots per dataset, excluding :init:
-# TYPE nas_zfs_snapshots gauge
-# HELP nas_zfs_snapshot_used_bytes Space held by snapshots per dataset
-# TYPE nas_zfs_snapshot_used_bytes gauge
-# HELP nas_zfs_snapshot_newest_timestamp Creation time of the newest snapshot
-# TYPE nas_zfs_snapshot_newest_timestamp gauge
-# HELP nas_zfs_snapshot_oldest_timestamp Creation time of the oldest snapshot
-# TYPE nas_zfs_snapshot_oldest_timestamp gauge
-# HELP nas_hbs_installed 1 when HBS 3 is installed
-# TYPE nas_hbs_installed gauge
-# HELP nas_textfile_last_run_timestamp Unix time of the last run per NAS
-# TYPE nas_textfile_last_run_timestamp gauge
-EOF
+# name|help, in output order
+FAMILIES='nas_up|1 when ssh and zfs answered
+nas_zpool_size_bytes|Pool size
+nas_zpool_alloc_bytes|Pool allocated bytes
+nas_zpool_capacity_percent|Pool capacity used, percent
+nas_zpool_health|1 for the current pool state
+nas_zfs_used_bytes|Dataset used bytes
+nas_zfs_snapshots|Snapshots per dataset, excluding :init:
+nas_zfs_snapshot_used_bytes|Space held by snapshots per dataset
+nas_zfs_snapshot_newest_timestamp|Creation time of the newest snapshot
+nas_zfs_snapshot_oldest_timestamp|Creation time of the oldest snapshot
+nas_hbs_installed|1 when HBS 3 is installed
+nas_textfile_last_run_timestamp|Unix time of the last run per NAS'
+
+group() { # stdin: samples in any order -> stdout: HELP/TYPE + contiguous family
+  awk -v fams="$FAMILIES" '
+    { name = $0; sub(/[{ ].*/, "", name); body[name] = body[name] $0 "\n" }
+    END { n = split(fams, f, "\n")
+      for (i = 1; i <= n; i++) { split(f[i], kv, "|")
+        if (!(kv[1] in body)) continue
+        printf "# HELP %s %s\n# TYPE %s gauge\n%s", kv[1], kv[2], kv[1], body[kv[1]] } }'
 }
 
-[ $# -ge 1 ] || { sed -n '2,15p' "$0"; exit 1; }
-label=$1; shift
-header
+[ $# -ge 1 ] || { sed -n '2,20p' "$0"; exit 1; }
 if [ -n "${NAS_TEXTFILE_LOCAL:-}" ]; then
-  sh -c "$remote" nas "$label"
+  sh -c "$remote" nas "$1" | group
   exit 0
 fi
-[ $# -ge 1 ] || { printf 'nas-textfile: need at least one user@host\n' >&2; exit 1; }
-first=1
-for h in "$@"; do
-  if [ "$first" = 1 ]; then l=$label; first=0; else l=${h#*@}; fi
+for spec in "$@"; do
+  case "$spec" in *=*@*) ;; *) printf 'nas-textfile: expected LABEL=user@host, got %s\n' "$spec" >&2; exit 1 ;; esac
+done
+for spec in "$@"; do
+  l=${spec%%=*}; h=${spec#*=}
   if ! printf '%s\n' "$remote" | ssh -o BatchMode=yes -o ConnectTimeout=10 "$h" sh -s "$l" 2>/dev/null; then
     printf 'nas_up{nas="%s"} 0\n' "$l"
   fi
-done
+done | group
