@@ -52,7 +52,7 @@
   {
    "id": 2,
    "type": "stat",
-   "title": "firing 的告警",
+   "title": "critical",
    "description": "Prometheus 規則正在 firing 的 critical 數",
    "datasource": {
     "type": "prometheus",
@@ -62,7 +62,7 @@
     "x": 0,
     "y": 1,
     "w": 4,
-    "h": 4
+    "h": 6
    },
    "targets": [
     {
@@ -126,7 +126,7 @@
     "x": 4,
     "y": 1,
     "w": 4,
-    "h": 4
+    "h": 6
    },
    "targets": [
     {
@@ -181,7 +181,7 @@
    "id": 4,
    "type": "table",
    "title": "firing 清單",
-   "description": "每一列是一條規則對一組標籤。嚴重度與規則名稱來自 prometheus/rules",
+   "description": "每一列是一條規則對一組標籤，與 Alertmanager 收到的是同一份。嚴重度與規則名稱來自 prometheus/rules",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -190,7 +190,7 @@
     "x": 8,
     "y": 1,
     "w": 16,
-    "h": 4
+    "h": 6
    },
    "targets": [
     {
@@ -212,14 +212,70 @@
       "mode": "palette-classic"
      }
     },
-    "overrides": []
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "severity"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background"
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "critical": {
+            "text": "critical",
+            "color": "red",
+            "index": 0
+           },
+           "warning": {
+            "text": "warning",
+            "color": "orange",
+            "index": 1
+           },
+           "info": {
+            "text": "info",
+            "color": "blue",
+            "index": 2
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.width",
+        "value": 90
+       }
+      ]
+     }
+    ]
    },
    "options": {
     "showHeader": true,
     "cellHeight": "sm",
     "footer": {
      "show": false
-    }
+    },
+    "sortBy": [
+     {
+      "displayName": "severity",
+      "desc": false
+     }
+    ]
    },
    "transformations": [
     {
@@ -231,12 +287,19 @@
      "options": {
       "excludeByName": {
        "Time": true,
-       "Value": true,
        "__name__": true,
-       "alertstate": true,
        "job": true,
        "instance": true,
-       "site": true
+       "site": true,
+       "role": true,
+       "hw": true,
+       "Value": true,
+       "alertstate": true
+      },
+      "renameByName": {},
+      "indexByName": {
+       "alertname": 0,
+       "severity": 1
       }
      }
     }
@@ -249,7 +312,7 @@
    "collapsed": false,
    "gridPos": {
     "x": 0,
-    "y": 5,
+    "y": 7,
     "w": 24,
     "h": 1
    },
@@ -259,14 +322,14 @@
    "id": 6,
    "type": "stat",
    "title": "熱 soak 秒數",
-   "description": "最熱 thermal zone 連續 ≥ 88 °C 的秒數。守護在 240 s 動手，告警在 200 s，差額是 textfile 10 s 加抓取 15 s 的相位差（Day 19）",
+   "description": "最熱 thermal zone 連續 ≥ 88 °C 的秒數。守護在 240 s 動手，告警在 200 s，差額是 textfile 10 s、抓取 15 s、規則評估 15 s 的相位差",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
    },
    "gridPos": {
     "x": 0,
-    "y": 6,
+    "y": 8,
     "w": 6,
     "h": 5
    },
@@ -335,7 +398,7 @@
    },
    "gridPos": {
     "x": 6,
-    "y": 6,
+    "y": 8,
     "w": 6,
     "h": 5
    },
@@ -404,7 +467,7 @@
    },
    "gridPos": {
     "x": 12,
-    "y": 6,
+    "y": 8,
     "w": 6,
     "h": 5
    },
@@ -469,7 +532,7 @@
    },
    "gridPos": {
     "x": 18,
-    "y": 6,
+    "y": 8,
     "w": 6,
     "h": 5
    },
@@ -534,7 +597,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 11,
+    "y": 13,
     "w": 12,
     "h": 8
    },
@@ -614,7 +677,7 @@
    },
    "gridPos": {
     "x": 12,
-    "y": 11,
+    "y": 13,
     "w": 12,
     "h": 8
    },
@@ -689,7 +752,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 19,
+    "y": 21,
     "w": 12,
     "h": 6
    },
@@ -742,7 +805,7 @@
    },
    "gridPos": {
     "x": 12,
-    "y": 19,
+    "y": 21,
     "w": 12,
     "h": 6
    },
@@ -793,7 +856,7 @@
    "collapsed": false,
    "gridPos": {
     "x": 0,
-    "y": 25,
+    "y": 27,
     "w": 24,
     "h": 1
    },
@@ -810,7 +873,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 26,
+    "y": 28,
     "w": 8,
     "h": 7
    },
@@ -881,7 +944,7 @@
    },
    "gridPos": {
     "x": 8,
-    "y": 26,
+    "y": 28,
     "w": 8,
     "h": 7
    },
@@ -909,7 +972,7 @@
      {
       "matcher": {
        "id": "byName",
-       "options": "state"
+       "options": "狀態"
       },
       "properties": [
        {
@@ -919,16 +982,35 @@
         }
        },
        {
-        "id": "thresholds",
+        "id": "color",
         "value": {
-         "mode": "absolute",
-         "steps": [
-          {
-           "value": null,
-           "color": "green"
-          }
-         ]
+         "mode": "thresholds"
         }
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "ONLINE": {
+            "text": "ONLINE",
+            "color": "green",
+            "index": 0
+           }
+          }
+         },
+         {
+          "type": "regex",
+          "options": {
+           "pattern": ".*",
+           "result": {
+            "color": "red",
+            "index": 1
+           }
+          }
+         }
+        ]
        }
       ]
      }
@@ -951,11 +1033,18 @@
      "options": {
       "excludeByName": {
        "Time": true,
-       "Value": true,
        "__name__": true,
        "job": true,
        "instance": true,
-       "site": true
+       "site": true,
+       "role": true,
+       "hw": true,
+       "Value": true
+      },
+      "renameByName": {
+       "nas": "NAS",
+       "pool": "池",
+       "state": "狀態"
       }
      }
     }
@@ -972,7 +1061,7 @@
    },
    "gridPos": {
     "x": 16,
-    "y": 26,
+    "y": 28,
     "w": 8,
     "h": 7
    },
@@ -1036,14 +1125,14 @@
    "id": 18,
    "type": "table",
    "title": "磁碟",
-   "description": "每顆磁碟的狀態字串與溫度。狀態字串不是 Good 時 NasDiskNotGood 會響",
+   "description": "每顆磁碟的狀態字串與溫度。QuTS hero 的健康值是 Good，其他字串 NasDiskNotGood 會響",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
    },
    "gridPos": {
     "x": 0,
-    "y": 33,
+    "y": 35,
     "w": 12,
     "h": 8
    },
@@ -1071,13 +1160,92 @@
      {
       "matcher": {
        "id": "byName",
-       "options": "Value"
+       "options": "槽"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 50
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "NAS"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 90
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "狀態"
       },
       "properties": [
        {
         "id": "custom.cellOptions",
         "value": {
          "type": "color-background"
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "Good": {
+            "text": "Good",
+            "color": "green",
+            "index": 0
+           }
+          }
+         },
+         {
+          "type": "regex",
+          "options": {
+           "pattern": ".*",
+           "result": {
+            "color": "red",
+            "index": 1
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.width",
+        "value": 80
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "溫度"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background"
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
         }
        },
        {
@@ -1099,6 +1267,10 @@
        {
         "id": "unit",
         "value": "celsius"
+       },
+       {
+        "id": "custom.width",
+        "value": 80
        }
       ]
      }
@@ -1125,7 +1297,24 @@
        "job": true,
        "instance": true,
        "site": true,
-       "diskSerialNumber": true
+       "role": true,
+       "hw": true,
+       "diskSerialNumber": true,
+       "diskType": true
+      },
+      "renameByName": {
+       "nas": "NAS",
+       "diskIndex": "槽",
+       "diskModel": "型號",
+       "qnap_disk_status": "狀態",
+       "Value": "溫度"
+      },
+      "indexByName": {
+       "NAS": 0,
+       "槽": 1,
+       "型號": 2,
+       "狀態": 3,
+       "溫度": 4
       }
      }
     }
@@ -1135,14 +1324,14 @@
    "id": 19,
    "type": "table",
    "title": "快照",
-   "description": "每個資料集的快照數、最新快照距今天數、快照佔用。Day 17 的政策是每日快照，超過 2 天 NasSnapshotStale 會響",
+   "description": "每個資料集的快照數、最新快照距今天數、快照佔用。:init: 不計。Day 17 的政策是每日快照，超過 2 天 NasSnapshotStale 會響",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
    },
    "gridPos": {
     "x": 12,
-    "y": 33,
+    "y": 35,
     "w": 12,
     "h": 8
    },
@@ -1152,7 +1341,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "nas_zfs_snapshots",
+     "expr": "max without (__name__) (nas_zfs_snapshots)",
      "refId": "A",
      "legendFormat": "__auto",
      "instant": true,
@@ -1164,7 +1353,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "(time() - nas_zfs_snapshot_newest_timestamp) / 86400",
+     "expr": "max without (__name__) ((time() - nas_zfs_snapshot_newest_timestamp) / 86400)",
      "refId": "B",
      "legendFormat": "__auto",
      "instant": true,
@@ -1176,7 +1365,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "nas_zfs_snapshot_used_bytes",
+     "expr": "max without (__name__) (nas_zfs_snapshot_used_bytes)",
      "refId": "C",
      "legendFormat": "__auto",
      "instant": true,
@@ -1194,13 +1383,19 @@
      {
       "matcher": {
        "id": "byName",
-       "options": "Value #B"
+       "options": "最新距今"
       },
       "properties": [
        {
         "id": "custom.cellOptions",
         "value": {
          "type": "color-background"
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
         }
        },
        {
@@ -1232,7 +1427,7 @@
      {
       "matcher": {
        "id": "byName",
-       "options": "Value #C"
+       "options": "佔用"
       },
       "properties": [
        {
@@ -1263,7 +1458,16 @@
        "__name__": true,
        "job": true,
        "instance": true,
-       "site": true
+       "site": true,
+       "role": true,
+       "hw": true
+      },
+      "renameByName": {
+       "nas": "NAS",
+       "dataset": "資料集",
+       "Value #A": "快照數",
+       "Value #B": "最新距今",
+       "Value #C": "佔用"
       }
      }
     }
@@ -1280,7 +1484,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 41,
+    "y": 43,
     "w": 8,
     "h": 6
    },
@@ -1335,14 +1539,14 @@
    "id": 21,
    "type": "timeseries",
    "title": "NAS 網路",
-   "description": "IF-MIB 計數。Day 14 量到的碟組上限約 666 MB/s，網路不是瓶頸時應低於它",
+   "description": "IF-MIB 計數，只看實體埠與 bond。Day 14 量到的碟組上限約 666 MB/s，網路不是瓶頸時應低於它",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
    },
    "gridPos": {
     "x": 8,
-    "y": 41,
+    "y": 43,
     "w": 8,
     "h": 6
    },
@@ -1352,7 +1556,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "rate(ifHCInOctets{ifName!~\"lo.*\"}[5m]) * 8",
+     "expr": "rate(ifHCInOctets{ifName=~\"eth[0-9]+|bond[0-9]+\"}[5m]) * 8",
      "refId": "A",
      "legendFormat": "in {{nas}} {{ifName}}"
     },
@@ -1361,7 +1565,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "rate(ifHCOutOctets{ifName!~\"lo.*\"}[5m]) * 8",
+     "expr": "rate(ifHCOutOctets{ifName=~\"eth[0-9]+|bond[0-9]+\"}[5m]) * 8",
      "refId": "B",
      "legendFormat": "out {{nas}} {{ifName}}"
     }
@@ -1404,7 +1608,7 @@
    },
    "gridPos": {
     "x": 16,
-    "y": 41,
+    "y": 43,
     "w": 8,
     "h": 6
    },
@@ -1453,7 +1657,7 @@
    "collapsed": false,
    "gridPos": {
     "x": 0,
-    "y": 47,
+    "y": 49,
     "w": 24,
     "h": 1
    },
@@ -1470,7 +1674,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 48,
+    "y": 50,
     "w": 4,
     "h": 5
    },
@@ -1535,7 +1739,7 @@
    },
    "gridPos": {
     "x": 4,
-    "y": 48,
+    "y": 50,
     "w": 4,
     "h": 5
    },
@@ -1597,14 +1801,14 @@
    "id": 26,
    "type": "stat",
    "title": "QDevice 票",
-   "description": "0 多半是 NAS 重開中，Virtualization Station 上的 qnetd 還沒回來",
+   "description": "0 多半是 NAS 重開中，Virtualization Station 上的 qnetd 還沒回來，或節點上的 corosync-qdevice 停了",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
    },
    "gridPos": {
     "x": 8,
-    "y": 48,
+    "y": 50,
     "w": 4,
     "h": 5
    },
@@ -1669,8 +1873,8 @@
    },
    "gridPos": {
     "x": 12,
-    "y": 48,
-    "w": 6,
+    "y": 50,
+    "w": 12,
     "h": 5
    },
    "targets": [
@@ -1725,83 +1929,18 @@
   },
   {
    "id": 28,
-   "type": "stat",
-   "title": "儲存",
-   "description": "NFS 資料存放區在 NAS 重開時會變 0，約 8 分鐘（Day 15 演練 1）",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "prometheus"
-   },
-   "gridPos": {
-    "x": 18,
-    "y": 48,
-    "w": 6,
-    "h": 5
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "prometheus"
-     },
-     "expr": "max without (instance) (pve_up{id=~\"storage/.*\"})",
-     "refId": "A",
-     "legendFormat": "{{id}}",
-     "instant": true,
-     "range": false
-    }
-   ],
-   "fieldConfig": {
-    "defaults": {
-     "color": {
-      "mode": "thresholds"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "value": null,
-        "color": "red"
-       },
-       {
-        "value": 1,
-        "color": "green"
-       }
-      ]
-     },
-     "decimals": 0
-    },
-    "overrides": []
-   },
-   "options": {
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
-    },
-    "textMode": "value_and_name",
-    "colorMode": "background",
-    "graphMode": "none",
-    "justifyMode": "center",
-    "orientation": "auto"
-   }
-  },
-  {
-   "id": 29,
    "type": "table",
    "title": "HA 資源",
-   "description": "每個 HA 管理的客體目前的狀態。started 以外的狀態都值得看一眼，error、fence、recovery 會響",
+   "description": "每個 HA 管理的客體與節點目前的狀態。error、fence、recovery 會響",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
    },
    "gridPos": {
     "x": 0,
-    "y": 53,
-    "w": 12,
-    "h": 7
+    "y": 55,
+    "w": 8,
+    "h": 8
    },
    "targets": [
     {
@@ -1827,7 +1966,7 @@
      {
       "matcher": {
        "id": "byName",
-       "options": "state"
+       "options": "狀態"
       },
       "properties": [
        {
@@ -1837,16 +1976,60 @@
         }
        },
        {
-        "id": "thresholds",
+        "id": "color",
         "value": {
-         "mode": "absolute",
-         "steps": [
-          {
-           "value": null,
-           "color": "orange"
-          }
-         ]
+         "mode": "thresholds"
         }
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "started": {
+            "text": "started",
+            "color": "green",
+            "index": 0
+           },
+           "online": {
+            "text": "online",
+            "color": "green",
+            "index": 1
+           },
+           "stopped": {
+            "text": "stopped",
+            "color": "blue",
+            "index": 2
+           },
+           "error": {
+            "text": "error",
+            "color": "red",
+            "index": 3
+           },
+           "fence": {
+            "text": "fence",
+            "color": "red",
+            "index": 4
+           },
+           "recovery": {
+            "text": "recovery",
+            "color": "red",
+            "index": 5
+           }
+          }
+         },
+         {
+          "type": "regex",
+          "options": {
+           "pattern": ".*",
+           "result": {
+            "color": "orange",
+            "index": 6
+           }
+          }
+         }
+        ]
        }
       ]
      }
@@ -1869,11 +2052,131 @@
      "options": {
       "excludeByName": {
        "Time": true,
-       "Value": true,
        "__name__": true,
        "job": true,
        "instance": true,
-       "site": true
+       "site": true,
+       "role": true,
+       "hw": true,
+       "Value": true
+      },
+      "renameByName": {
+       "id": "資源",
+       "state": "狀態"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": 29,
+   "type": "table",
+   "title": "儲存",
+   "description": "各節點看到的資料存放區。NFS 在 NAS 重開時會變不可用，約 8 分鐘（Day 15 演練 1）",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 55,
+    "w": 8,
+    "h": 8
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max without (instance) (pve_up{id=~\"storage/.*\"})",
+     "refId": "A",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "狀態"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background"
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "1": {
+            "text": "可用",
+            "color": "green",
+            "index": 0
+           },
+           "0": {
+            "text": "不可用",
+            "color": "red",
+            "index": 1
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.width",
+        "value": 90
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false
+    }
+   },
+   "transformations": [
+    {
+     "id": "merge",
+     "options": {}
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "__name__": true,
+       "job": true,
+       "instance": true,
+       "site": true,
+       "role": true,
+       "hw": true
+      },
+      "renameByName": {
+       "id": "儲存",
+       "Value": "狀態"
       }
      }
     }
@@ -1889,10 +2192,10 @@
     "uid": "prometheus"
    },
    "gridPos": {
-    "x": 12,
-    "y": 53,
-    "w": 12,
-    "h": 7
+    "x": 16,
+    "y": 55,
+    "w": 8,
+    "h": 8
    },
    "targets": [
     {
@@ -1952,7 +2255,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 60,
+    "y": 63,
     "w": 8,
     "h": 6
    },
@@ -2007,7 +2310,7 @@
    },
    "gridPos": {
     "x": 8,
-    "y": 60,
+    "y": 63,
     "w": 8,
     "h": 6
    },
@@ -2062,7 +2365,7 @@
    },
    "gridPos": {
     "x": 16,
-    "y": 60,
+    "y": 63,
     "w": 8,
     "h": 6
    },
@@ -2120,7 +2423,7 @@
    "collapsed": false,
    "gridPos": {
     "x": 0,
-    "y": 66,
+    "y": 69,
     "w": 24,
     "h": 1
    },
@@ -2128,18 +2431,18 @@
   },
   {
    "id": 35,
-   "type": "stat",
-   "title": "距上次成功還原（天）",
-   "description": "每個演練標籤一格。pve 與 nas 的政策是每月，30 天轉橘。cloud 是每季，90 天轉紅。這一排全綠才叫備份存在",
+   "type": "bargauge",
+   "title": "距上次成功（天）",
+   "description": "每個演練標籤一條。pve 與 nas 的政策是每月，30 天轉橘。cloud 是每季，90 天轉紅。這一排全綠才叫備份存在",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
    },
    "gridPos": {
     "x": 0,
-    "y": 67,
-    "w": 24,
-    "h": 5
+    "y": 70,
+    "w": 10,
+    "h": 10
    },
    "targets": [
     {
@@ -2177,11 +2480,17 @@
        }
       ]
      },
+     "min": 0,
+     "max": 90,
      "decimals": 1
     },
     "overrides": []
    },
    "options": {
+    "displayMode": "basic",
+    "orientation": "horizontal",
+    "showUnfilled": true,
+    "namePlacement": "left",
     "reduceOptions": {
      "calcs": [
       "lastNotNull"
@@ -2189,11 +2498,10 @@
      "fields": "",
      "values": false
     },
-    "textMode": "value_and_name",
-    "colorMode": "background",
-    "graphMode": "none",
-    "justifyMode": "center",
-    "orientation": "auto"
+    "minVizHeight": 14,
+    "maxVizHeight": 22,
+    "valueMode": "color",
+    "sizing": "manual"
    }
   },
   {
@@ -2206,10 +2514,10 @@
     "uid": "prometheus"
    },
    "gridPos": {
-    "x": 0,
-    "y": 72,
+    "x": 10,
+    "y": 70,
     "w": 14,
-    "h": 8
+    "h": 10
    },
    "targets": [
     {
@@ -2217,7 +2525,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "drill_last_result",
+     "expr": "max without (__name__) (drill_last_result)",
      "refId": "A",
      "legendFormat": "__auto",
      "instant": true,
@@ -2229,7 +2537,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "drill_last_rto_seconds",
+     "expr": "max without (__name__) (drill_last_rto_seconds)",
      "refId": "B",
      "legendFormat": "__auto",
      "instant": true,
@@ -2241,7 +2549,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "drill_last_rpo_seconds",
+     "expr": "max without (__name__) (drill_last_rpo_seconds)",
      "refId": "C",
      "legendFormat": "__auto",
      "instant": true,
@@ -2253,7 +2561,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "drill_last_rate_mib_per_second",
+     "expr": "max without (__name__) (drill_last_rate_mib_per_second)",
      "refId": "D",
      "legendFormat": "__auto",
      "instant": true,
@@ -2271,7 +2579,19 @@
      {
       "matcher": {
        "id": "byName",
-       "options": "Value #A"
+       "options": "來源"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 70
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "結果"
       },
       "properties": [
        {
@@ -2281,33 +2601,53 @@
         }
        },
        {
-        "id": "thresholds",
+        "id": "color",
         "value": {
-         "mode": "absolute",
-         "steps": [
-          {
-           "value": null,
-           "color": "red"
-          },
-          {
-           "value": 1,
-           "color": "green"
-          }
-         ]
+         "mode": "thresholds"
         }
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "1": {
+            "text": "通過",
+            "color": "green",
+            "index": 0
+           },
+           "0": {
+            "text": "失敗",
+            "color": "red",
+            "index": 1
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.width",
+        "value": 70
        }
       ]
      },
      {
       "matcher": {
        "id": "byName",
-       "options": "Value #B"
+       "options": "RTO"
       },
       "properties": [
        {
         "id": "custom.cellOptions",
         "value": {
          "type": "color-background"
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
         }
        },
        {
@@ -2329,30 +2669,46 @@
        {
         "id": "unit",
         "value": "s"
+       },
+       {
+        "id": "custom.width",
+        "value": 90
        }
       ]
      },
      {
       "matcher": {
        "id": "byName",
-       "options": "Value #C"
+       "options": "RPO"
       },
       "properties": [
        {
         "id": "unit",
         "value": "s"
+       },
+       {
+        "id": "custom.width",
+        "value": 90
        }
       ]
      },
      {
       "matcher": {
        "id": "byName",
-       "options": "Value #D"
+       "options": "速率"
       },
       "properties": [
        {
         "id": "unit",
         "value": "MiBs"
+       },
+       {
+        "id": "custom.width",
+        "value": 100
+       },
+       {
+        "id": "decimals",
+        "value": 1
        }
       ]
      }
@@ -2378,7 +2734,25 @@
        "__name__": true,
        "job": true,
        "instance": true,
-       "site": true
+       "site": true,
+       "role": true,
+       "hw": true
+      },
+      "renameByName": {
+       "source": "來源",
+       "label": "演練",
+       "Value #A": "結果",
+       "Value #B": "RTO",
+       "Value #C": "RPO",
+       "Value #D": "速率"
+      },
+      "indexByName": {
+       "來源": 0,
+       "演練": 1,
+       "結果": 2,
+       "RTO": 3,
+       "RPO": 4,
+       "速率": 5
       }
      }
     }
@@ -2394,10 +2768,10 @@
     "uid": "prometheus"
    },
    "gridPos": {
-    "x": 14,
-    "y": 72,
-    "w": 10,
-    "h": 8
+    "x": 0,
+    "y": 80,
+    "w": 24,
+    "h": 7
    },
    "targets": [
     {
@@ -2461,7 +2835,7 @@
    "collapsed": false,
    "gridPos": {
     "x": 0,
-    "y": 80,
+    "y": 87,
     "w": 24,
     "h": 1
    },
@@ -2469,18 +2843,18 @@
   },
   {
    "id": 39,
-   "type": "stat",
+   "type": "table",
    "title": "抓取目標",
-   "description": "",
+   "description": "每個抓取目標最後一次抓取是否成功。DOWN 五分鐘 TargetDown 會響",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
    },
    "gridPos": {
     "x": 0,
-    "y": 81,
+    "y": 88,
     "w": 12,
-    "h": 4
+    "h": 8
    },
    "targets": [
     {
@@ -2490,62 +2864,114 @@
      },
      "expr": "up",
      "refId": "A",
-     "legendFormat": "{{job}} {{instance}}",
+     "legendFormat": "__auto",
      "instant": true,
-     "range": false
+     "range": false,
+     "format": "table"
     }
    ],
    "fieldConfig": {
     "defaults": {
      "color": {
-      "mode": "thresholds"
-     },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "狀態"
+      },
+      "properties": [
        {
-        "value": null,
-        "color": "red"
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background"
+        }
        },
        {
-        "value": 1,
-        "color": "green"
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       },
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "1": {
+            "text": "UP",
+            "color": "green",
+            "index": 0
+           },
+           "0": {
+            "text": "DOWN",
+            "color": "red",
+            "index": 1
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.width",
+        "value": 80
        }
       ]
-     },
-     "decimals": 0
-    },
-    "overrides": []
+     }
+    ]
    },
    "options": {
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ],
-     "fields": "",
-     "values": false
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false
+    }
+   },
+   "transformations": [
+    {
+     "id": "merge",
+     "options": {}
     },
-    "textMode": "name",
-    "colorMode": "background",
-    "graphMode": "none",
-    "justifyMode": "center",
-    "orientation": "auto"
-   }
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "__name__": true,
+       "site": true,
+       "role": true,
+       "hw": true
+      },
+      "renameByName": {
+       "Value": "狀態"
+      },
+      "indexByName": {
+       "job": 0,
+       "instance": 1,
+       "nas": 2,
+       "狀態": 3
+      }
+     }
+    }
+   ]
   },
   {
    "id": 40,
-   "type": "stat",
+   "type": "bargauge",
    "title": "textfile 距上次執行",
-   "description": "Day 19 第四節。舊的 .prom 檔會讓數字看起來正常，這一格變橘就是靜默失效",
+   "description": "Day 19 第四節。舊的 .prom 檔會讓數字看起來正常，這一格變橘就是靜默失效。drills 每 15 分鐘一次，其他每分鐘或更快",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
    },
    "gridPos": {
     "x": 12,
-    "y": 81,
+    "y": 88,
     "w": 12,
-    "h": 4
+    "h": 8
    },
    "targets": [
     {
@@ -2553,9 +2979,9 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "max by (job) (time() - {__name__=~\".*_textfile_last_run_timestamp\"})",
+     "expr": "time() - label_replace({__name__=~\".+_textfile_last_run_timestamp\"}, \"textfile\", \"$1\", \"__name__\", \"(.+)_textfile_last_run_timestamp\")",
      "refId": "A",
-     "legendFormat": "{{job}}",
+     "legendFormat": "{{textfile}} {{node}}{{nas}}",
      "instant": true,
      "range": false
     }
@@ -2583,11 +3009,46 @@
        }
       ]
      },
+     "min": 0,
+     "max": 1200,
      "decimals": 0
     },
-    "overrides": []
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "drills.*"
+      },
+      "properties": [
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "value": null,
+           "color": "green"
+          },
+          {
+           "value": 1800,
+           "color": "orange"
+          },
+          {
+           "value": 7200,
+           "color": "red"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    ]
    },
    "options": {
+    "displayMode": "basic",
+    "orientation": "horizontal",
+    "showUnfilled": true,
+    "namePlacement": "left",
     "reduceOptions": {
      "calcs": [
       "lastNotNull"
@@ -2595,11 +3056,10 @@
      "fields": "",
      "values": false
     },
-    "textMode": "value_and_name",
-    "colorMode": "background",
-    "graphMode": "none",
-    "justifyMode": "center",
-    "orientation": "auto"
+    "minVizHeight": 14,
+    "maxVizHeight": 22,
+    "valueMode": "color",
+    "sizing": "manual"
    }
   }
  ]
