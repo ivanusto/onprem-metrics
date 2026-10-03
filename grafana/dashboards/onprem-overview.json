@@ -18,12 +18,12 @@
  "annotations": {
   "list": [
    {
-    "name": "告警",
+    "name": "critical 告警",
     "datasource": {
      "type": "prometheus",
      "uid": "prometheus"
     },
-    "enable": true,
+    "enable": false,
     "iconColor": "red",
     "expr": "ALERTS{alertstate=\"firing\",severity=\"critical\"}",
     "step": "60s",

@@ -366,8 +366,11 @@ def build():
         "uid": "onprem-overview", "title": "地端機房總覽", "tags": ["onprem", "day20"],
         "timezone": "browser", "editable": False, "graphTooltip": 1, "schemaVersion": 39, "version": 1,
         "refresh": "30s", "time": {"from": "now-6h", "to": "now"},
+        # Off by default: a critical that fires for days (pbs-nas on the
+        # first day) paints every graph red. Toggle it on to line alerts up
+        # with a curve.
         "annotations": {"list": [
-            {"name": "告警", "datasource": DS, "enable": True, "iconColor": "red",
+            {"name": "critical 告警", "datasource": DS, "enable": False, "iconColor": "red",
              "expr": 'ALERTS{alertstate="firing",severity="critical"}', "step": "60s",
              "titleFormat": "{{alertname}}", "textFormat": "{{summary}}"}]},
         "templating": {"list": []},
