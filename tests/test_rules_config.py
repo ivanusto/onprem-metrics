@@ -12,9 +12,10 @@ def seconds(v):
 
 class RulesConfig(unittest.TestCase):
     def test_gb10_group_evaluates_fast_enough(self):
-        """The soak alert has 240 - 200 = 40 s before the guard acts. The
-        textfile (10 s) and the scrape (15 s) use 25 of them, so the gb10
-        group must evaluate every 15 s or less. promtool test rules steps all
+        """The soak alert fires at 180 and the guard acts at 240. The textfile
+        age (up to 10 s), the scrape step (10 or 20 s) and the evaluation
+        wait use up to 45 s of that, so the gb10 group must evaluate every
+        15 s or less. promtool test rules steps all
         groups at the test file's interval and cannot catch this, and the
         global evaluation_interval in prometheus.yml is 60 s."""
         rules = (HERE / "prometheus" / "rules" / "thresholds.yml").read_text(encoding="utf-8")

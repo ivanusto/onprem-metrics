@@ -1,16 +1,19 @@
 # Day 20: alerts on the numbers themselves. Day 19's staleness.yml says
 # whether the pipeline is alive; these say whether the site is.
 #
-# Every threshold has a source. The soak budget is 240 s (gb10-ops, Day 12)
-# and the textfile (10 s) plus scrape (15 s) phase lag is up to 25 s
-# (Day 19 section 6.2: guard tripped at 240, Prometheus saw 227), so the
-# alert fires at 200. Memory lines are gb10-ops warn 6 GiB / act 3 GiB.
+# Every threshold has a source. The soak budget is 240 s (gb10-ops, Day 12).
+# What Prometheus sees lags the guard: the textfile is up to 10 s old, the
+# scrape sees it in 10 or 20 s steps (10 s writes, 15 s scrapes), and the
+# rule is evaluated up to 15 s after the scrape. Day 20 measured it: with
+# "> 200" the series sat at exactly 200, the next sample was 220, and the
+# alert fired 10.1 s before the guard. Worst case that threshold fires 5 s
+# after the guard, so the alert is ">= 180": 15 to 60 s ahead of it.
+# Memory lines are gb10-ops warn 6 GiB / act 3 GiB.
 # The ZFS 80 % line is Day 14. Drill ages are the policy.md of each repo.
 #
 # Rule groups inherit the global evaluation_interval (60 s in
 # prometheus.yml). The gb10 group evaluates every 15 s instead: with 60 s
-# the worst-case lag becomes 10 + 15 + 60 = 85 s and the soak alert would
-# fire after the guard has already acted.
+# the soak alert would fire after the guard far more often than not.
 #
 # pve-exporter is scraped through both nodes and each one reports the
 # whole cluster, so every pve_up series exists twice (instance .9 and .5).
@@ -20,7 +23,7 @@ groups:
     interval: 15s
     rules:
       - alert: Gb10SoakNearBudget
-        expr: gb10_soak_seconds > 200
+        expr: gb10_soak_seconds >= 180
         labels: {severity: warning}
         annotations:
           summary: "{{ $labels.node }} hottest zone above threshold for {{ $value }} s, guard trips at 240"

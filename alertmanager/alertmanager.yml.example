@@ -19,7 +19,7 @@ route:
   repeat_interval: 12h
   routes:
     # The soak alert is a warning, but it is only useful before the guard
-    # acts (at most 40 s later), so it skips the 30 s batching.
+    # acts (15 to 60 s later), so it skips the 30 s batching.
     - matchers: [alertname="Gb10SoakNearBudget"]
       receiver: ops-warning
       group_wait: 0s

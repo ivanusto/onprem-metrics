@@ -15,7 +15,7 @@
 | `systemd/` | DGX Spark 與收集端 | node_exporter 單元、gb10-textfile 的 service 與 timer、收集端的 cron.d |
 | `install-node.sh` | 每台 DGX Spark；`--collector` 給收集端 | 下載 node_exporter（arm64 或 amd64），對 release 的 sha256 校驗，安裝單元。DGX Spark 模式另裝 gb10-textfile 與 `/run/gb10`（tmpfiles.d）；`--collector` 只裝 node_exporter 與 textfile 目錄 |
 | `verify.sh` | 任何有 curl、ssh 與 python3 的機器 | 每個目標的 `up`、抓取秒數與樣本數，每個來源一個 Prometheus 的值與原始工具的值並列，演練表。NAS 端只用一般帳號讀得到的來源（`getsysinfo` 的溫度要 root） |
-| `prometheus/rules/thresholds.yml` | 收集端 VM | 數值告警（Day 20）。soak 超過 200 秒（守護 240 秒動手，扣掉 textfile、抓取與規則評估的相位差；gb10 群組因此每 15 秒評估一次）、MemAvailable 6 與 3 GiB、`NV_ERR_NO_MEMORY` 增量、儲存池 80 與 90 %、QuTS hero 回報的池與磁碟狀態字串、快照逾 2 天、失去法定人數與少一票、HA 資源異常、演練逾期與失敗。每個門檻都寫出處 |
+| `prometheus/rules/thresholds.yml` | 收集端 VM | 數值告警（Day 20）。soak 達 180 秒（守護 240 秒動手，textfile 舊值、抓取跳階與規則評估最多吃掉 45 秒，Day 20 實測；gb10 群組因此每 15 秒評估一次）、MemAvailable 6 與 3 GiB、`NV_ERR_NO_MEMORY` 增量、儲存池 80 與 90 %、QuTS hero 回報的池與磁碟狀態字串、快照逾 2 天、失去法定人數與少一票、HA 資源異常、演練逾期與失敗。每個門檻都寫出處 |
 | `textfile/pve-quorum-textfile.sh` | 收集端主機，cron 每分鐘 | 參數 `LABEL=root@節點1,root@節點2`，ssh 到第一台有回應的節點跑 `pvecm status`，輸出 expected、total、quorum 票數、Quorate 旗標、QDevice 票與各節點票。金鑰在節點上以 `from=` 與 `command="/usr/bin/pvecm status",restrict` 限定 |
 | `alertmanager/`、`grafana/` | 收集端 VM | Alertmanager 路由（critical 立即、warning 30 秒一批、info 每日彙整、soak 告警不等批次）與七條 inhibit，管線死掉時不會連帶對每個停止回報的數值告警。Grafana 以 provisioning 載入資料源與一面儀表板，JSON 由 `build-dashboard.py` 產生，UI 改不了 |
 | `tests/` | CI | 假的 sysfs、nvidia-smi、dmesg、zfs、zpool、getsysinfo，每份輸出都過 `promtool check metrics` |

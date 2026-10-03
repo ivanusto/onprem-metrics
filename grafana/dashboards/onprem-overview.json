@@ -322,7 +322,7 @@
    "id": 6,
    "type": "stat",
    "title": "熱 soak 秒數",
-   "description": "最熱 thermal zone 連續 ≥ 88 °C 的秒數。守護在 240 s 動手，告警在 200 s，差額是 textfile 10 s、抓取 15 s、規則評估 15 s 的相位差",
+   "description": "最熱 thermal zone 連續 ≥ 88 °C 的秒數。守護在 240 s 動手，告警在 180 s，差額涵蓋 textfile 最多 10 s 的舊值、抓取 10 或 20 s 的跳階、規則評估最多 15 s（Day 20 實測）",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -360,7 +360,7 @@
         "color": "green"
        },
        {
-        "value": 200,
+        "value": 180,
         "color": "orange"
        },
        {
@@ -715,7 +715,7 @@
         "color": "transparent"
        },
        {
-        "value": 200,
+        "value": 180,
         "color": "orange"
        },
        {

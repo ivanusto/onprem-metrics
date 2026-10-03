@@ -15,7 +15,7 @@ DS = {"type": "prometheus", "uid": "prometheus"}
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dashboards", "onprem-overview.json")
 
 # Thresholds shared with prometheus/rules/thresholds.yml
-SOAK_WARN, SOAK_BUDGET = 200, 240
+SOAK_WARN, SOAK_BUDGET = 180, 240
 MEM_WARN, MEM_CRIT = 6 * 1024 ** 3, 3 * 1024 ** 3
 POOL_WARN, POOL_CRIT = 80, 90
 DISK_TEMP_WARN = 50
@@ -197,7 +197,7 @@ def build():
     P.append(row("GPU 節點（DGX Spark）", y)); y += 1
     P.append(stat("熱 soak 秒數", 0, y, 6, 5, "gb10_soak_seconds", "{{node}}", unit="s",
                   thresholds=steps((None, "green"), (SOAK_WARN, "orange"), (SOAK_BUDGET, "red")),
-                  desc=f"最熱 thermal zone 連續 ≥ 88 °C 的秒數。守護在 {SOAK_BUDGET} s 動手，告警在 {SOAK_WARN} s，差額是 textfile 10 s、抓取 15 s、規則評估 15 s 的相位差"))
+                  desc=f"最熱 thermal zone 連續 ≥ 88 °C 的秒數。守護在 {SOAK_BUDGET} s 動手，告警在 {SOAK_WARN} s，差額涵蓋 textfile 最多 10 s 的舊值、抓取 10 或 20 s 的跳階、規則評估最多 15 s（Day 20 實測）"))
     P.append(stat("可用記憶體", 6, y, 6, 5, "gb10_mem_available_bytes", "{{node}}", unit="bytes",
                   thresholds=steps((None, "red"), (MEM_CRIT, "orange"), (MEM_WARN, "green")),
                   desc="MemAvailable。統一記憶體看不到 GPU 配置，這個數掉到 6 GiB 以下 hw-sample 會警告，3 GiB 以下動手（gb10-ops）"))

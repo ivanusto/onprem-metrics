@@ -13,21 +13,21 @@ evaluation_interval: 15s
 tests:
   # Soak: Day 19 saw the guard trip at 240 while Prometheus held 227. The
   # alert must be firing before the guard acts, so it fires at the first
-  # sample above 200 with no "for".
+  # sample at or above 180 with no "for".
   - interval: 15s
     input_series:
       - series: 'gb10_soak_seconds{job="gb10",node="192.168.2.131",instance="192.168.2.131:9100"}'
         values: "0 21 36 51 66 81 96 111 126 141 156 171 186 201 216 227 0"
     alert_rule_test:
-      - eval_time: 3m
+      - eval_time: 2m45s
         alertname: Gb10SoakNearBudget
         exp_alerts: []
-      - eval_time: 3m15s          # 14th sample = 201
+      - eval_time: 3m             # 13th sample = 186
         alertname: Gb10SoakNearBudget
         exp_alerts:
           - exp_labels: {severity: warning, job: gb10, node: "192.168.2.131", instance: "192.168.2.131:9100"}
             exp_annotations:
-              summary: "192.168.2.131 hottest zone above threshold for 201 s, guard trips at 240"
+              summary: "192.168.2.131 hottest zone above threshold for 186 s, guard trips at 240"
               runbook: "Day 12: the guard will kill the hottest process; move or pause the workload first"
       - eval_time: 4m             # back to 0 after the guard
         alertname: Gb10SoakNearBudget
