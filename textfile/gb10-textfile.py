@@ -180,6 +180,8 @@ def collect(now, state, *, sysfs="/sys/class/thermal", nvidia_smi="nvidia-smi",
 def write_atomic(path, text):
     d = os.path.dirname(path) or "."
     fd, tmp = tempfile.mkstemp(dir=d, prefix=".prom.")
+    # mkstemp makes 0600; node_exporter runs as another user and must read it
+    os.fchmod(fd, 0o644)
     with os.fdopen(fd, "w") as fh:
         fh.write(text)
     os.replace(tmp, path)

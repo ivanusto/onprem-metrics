@@ -175,6 +175,8 @@ def main(argv=None):
         d = os.path.dirname(a.out) or "."
         os.makedirs(d, exist_ok=True)
         fd, tmp = tempfile.mkstemp(dir=d, prefix=".prom.")
+        # mkstemp makes 0600; node_exporter runs as another user and must read it
+        os.fchmod(fd, 0o644)
         with os.fdopen(fd, "w") as fh:
             fh.write(text)
         os.replace(tmp, a.out)

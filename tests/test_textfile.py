@@ -128,6 +128,8 @@ class Gb10(unittest.TestCase):
         self.assertTrue(os.path.exists(out))
         self.assertTrue(os.path.exists(st))
         self.assertFalse([f for f in os.listdir(os.path.dirname(out)) if f.startswith(".prom.")])
+        # node_exporter reads it as another user
+        self.assertEqual(os.stat(out).st_mode & 0o777, 0o644)
 
 
 class Drills(unittest.TestCase):
@@ -184,6 +186,11 @@ class Drills(unittest.TestCase):
         text = drills.render([("x", bad), ("y", os.path.join(self.tmp, "none.jsonl"))], 5)
         self.assertIn("drills_textfile_last_run_timestamp 5", text)
         self.assertNotIn("drill_last_timestamp{", text)
+
+    def test_out_is_world_readable(self):
+        out = os.path.join(self.tmp, "d", "drills.prom")
+        drills.main(["--out", out, "x=" + os.path.join(self.tmp, "none.jsonl")])
+        self.assertEqual(os.stat(out).st_mode & 0o777, 0o644)
 
     def test_num(self):
         self.assertEqual(drills.num("118s"), 118.0)
