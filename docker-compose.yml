@@ -9,7 +9,9 @@ services:
       - --storage.tsdb.path=/prometheus
       - --storage.tsdb.retention.time=90d
       - --web.enable-lifecycle
-    ports: ["9090:9090"]
+    # Day 20: Grafana is the front door; Prometheus UI stays reachable for
+    # promtool-style debugging but only from the collector host itself.
+    ports: ["127.0.0.1:9090:9090"]
     volumes:
       - ./prometheus:/etc/prometheus:ro
       - prometheus-data:/prometheus
@@ -40,5 +42,43 @@ services:
     ports: ["127.0.0.1:9116:9116"]
     restart: unless-stopped
 
+  # Day 20. Digests: run `docker buildx imagetools inspect IMAGE` on the
+  # collector and pin them the Day 3 way before the first `compose up`.
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.external-url=http://localhost:9093
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    ports: ["127.0.0.1:9093:9093"]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana-oss:12.2.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_SERVER_ROOT_URL: http://localhost:3000
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    secrets: [grafana_admin]
+    ports: ["3000:3000"]
+    restart: unless-stopped
+    depends_on: [prometheus]
+
+secrets:
+  grafana_admin:
+    file: ./grafana/admin_password   # gitignored, `openssl rand -base64 24 > grafana/admin_password`
+
 volumes:
   prometheus-data:
+  alertmanager-data:
+  grafana-data:

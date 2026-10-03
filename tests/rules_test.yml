@@ -1,0 +1,156 @@
+# promtool test rules tests/rules_test.yml
+# Each case feeds a synthetic series and asserts which alert fires when.
+# Scrape interval below matches gb10 (15 s); NAS/PVE/drill cases use 60 s.
+rule_files:
+  - ../prometheus/rules/thresholds.yml
+  - ../prometheus/rules/staleness.yml
+
+evaluation_interval: 15s
+
+tests:
+  # Soak: Day 19 saw the guard trip at 240 while Prometheus held 227. The
+  # alert must be firing before the guard acts, so it fires at the first
+  # sample above 200 with no "for".
+  - interval: 15s
+    input_series:
+      - series: 'gb10_soak_seconds{job="gb10",node="192.168.2.131",instance="192.168.2.131:9100"}'
+        values: "0 21 36 51 66 81 96 111 126 141 156 171 186 201 216 227 0"
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: Gb10SoakNearBudget
+        exp_alerts: []
+      - eval_time: 3m15s          # 14th sample = 201
+        alertname: Gb10SoakNearBudget
+        exp_alerts:
+          - exp_labels: {severity: warning, job: gb10, node: "192.168.2.131", instance: "192.168.2.131:9100"}
+            exp_annotations:
+              summary: "192.168.2.131 hottest zone above threshold for 201 s, guard trips at 240"
+              runbook: "Day 12: the guard will kill the hottest process; move or pause the workload first"
+      - eval_time: 4m             # back to 0 after the guard
+        alertname: Gb10SoakNearBudget
+        exp_alerts: []
+
+  # Memory: 6 GiB warning needs a minute, 3 GiB critical is immediate.
+  - interval: 15s
+    input_series:
+      - series: 'gb10_mem_available_bytes{job="gb10",node="n1",instance="n1:9100"}'
+        values: "8e9 5e9 5e9 5e9 5e9 5e9 2e9"
+    alert_rule_test:
+      - eval_time: 15s
+        alertname: Gb10MemAvailableLow
+        exp_alerts: []
+      - eval_time: 1m15s
+        alertname: Gb10MemAvailableLow
+        exp_alerts:
+          - exp_labels: {severity: warning, job: gb10, node: n1, instance: "n1:9100"}
+            exp_annotations: {summary: "n1 MemAvailable 4.657GiB, guard warns at 6 GiB"}
+      - eval_time: 1m30s
+        alertname: Gb10MemAvailableCritical
+        exp_alerts:
+          - exp_labels: {severity: critical, job: gb10, node: n1, instance: "n1:9100"}
+            exp_annotations: {summary: "n1 MemAvailable 1.863GiB, guard acts at 3 GiB"}
+
+  # NV_ERR_NO_MEMORY counter moves once.
+  - interval: 15s
+    input_series:
+      - series: 'gb10_nv_err_no_memory_total{job="gb10",node="n1",instance="n1:9100"}'
+        values: "0x10 1 1 1 1"
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: Gb10NvErrNoMemory
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: Gb10NvErrNoMemory
+        exp_alerts:
+          - exp_labels: {severity: critical, job: gb10, node: n1, instance: "n1:9100"}
+            exp_annotations: {summary: "n1 logged NV_ERR_NO_MEMORY in the last 10m (unified memory exhaustion, precedes livelock)"}
+
+  # Pool capacity crosses the 80 line and stays for 30 minutes.
+  - interval: 1m
+    input_series:
+      - series: 'nas_zpool_capacity_percent{job="collector-host",nas="primary",pool="zpool1"}'
+        values: "79 81x40"
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: NasPoolAbove80
+        exp_alerts: []
+      - eval_time: 32m
+        alertname: NasPoolAbove80
+        exp_alerts:
+          - exp_labels: {severity: warning, job: collector-host, nas: primary, pool: zpool1}
+            exp_annotations: {summary: "primary pool zpool1 at 81 %, ZFS fragmentation line is 80 (Day 14)"}
+      - eval_time: 32m
+        alertname: NasPoolAbove90
+        exp_alerts: []
+
+  # Pool state label other than ONLINE.
+  - interval: 1m
+    input_series:
+      - series: 'nas_zpool_health{job="collector-host",nas="primary",pool="zpool1",state="DEGRADED"}'
+        values: "1x5"
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: NasPoolNotOnline
+        exp_alerts:
+          - exp_labels: {severity: critical, job: collector-host, nas: primary, pool: zpool1, state: DEGRADED}
+            exp_annotations: {summary: "primary pool zpool1 is DEGRADED"}
+
+  # Day 15 table row 2: NAS reboots, QDevice vote gone, still quorate.
+  - interval: 1m
+    input_series:
+      - series: 'pve_quorum_expected_votes{job="collector-host",cluster="lab"}'
+        values: "3x5"
+      - series: 'pve_quorum_total_votes{job="collector-host",cluster="lab"}'
+        values: "3 2 2 2 2 2"
+      - series: 'pve_quorum_qdevice_votes{job="collector-host",cluster="lab"}'
+        values: "1 0 0 0 0 0"
+      - series: 'pve_up{job="pve",instance="192.168.2.9",id="cluster/lab"}'
+        values: "1x5"
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: PveVoteMissing
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: PveVoteMissing
+        exp_alerts:
+          - exp_labels: {severity: warning, job: collector-host, cluster: lab}
+            exp_annotations: {summary: "lab is missing 1 vote(s) but still quorate, nothing else may fail now (Day 15 check.sh rc=1)"}
+      - eval_time: 3m
+        alertname: PveQdeviceAbsent
+        exp_alerts:
+          - exp_labels: {severity: warning, job: collector-host, cluster: lab}
+            exp_annotations: {summary: "lab QDevice is not voting (NAS reboot or qnetd down)"}
+      - eval_time: 3m
+        alertname: PveQuorumLost
+        exp_alerts: []
+
+  # Day 15 table row 4: quorum lost.
+  - interval: 1m
+    input_series:
+      - series: 'pve_up{job="pve",instance="192.168.2.9",id="cluster/lab"}'
+        values: "1 0 0"
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: PveQuorumLost
+        exp_alerts:
+          - exp_labels: {severity: critical, job: pve, instance: "192.168.2.9", id: "cluster/lab"}
+            exp_annotations: {summary: "cluster cluster/lab not quorate, HA nodes will self-fence (Day 15 drill 3)"}
+
+  # Drill freshness: a pve drill that last passed 31 days ago.
+  - interval: 1m
+    input_series:
+      - series: 'drill_last_success_timestamp{job="collector-host",source="pve",label="d3-full"}'
+        values: "-2592000x3"   # promtool time() starts at 0, so 30 days before that
+      - series: 'drill_last_result{job="collector-host",source="pve",label="d3-full"}'
+        values: "0x3"
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: DrillStale
+        exp_alerts:
+          - exp_labels: {severity: warning, job: collector-host, source: pve, label: d3-full}
+            exp_annotations: {summary: "pve drill d3-full last passed 30d 0h 2m 0s ago, policy is monthly"}
+      - eval_time: 2m
+        alertname: DrillFailed
+        exp_alerts:
+          - exp_labels: {severity: warning, job: collector-host, source: pve, label: d3-full}
+            exp_annotations: {summary: "last pve drill d3-full failed"}

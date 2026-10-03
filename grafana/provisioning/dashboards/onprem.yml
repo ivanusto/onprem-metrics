@@ -1,0 +1,11 @@
+apiVersion: 1
+providers:
+  - name: onprem
+    folder: 地端機房
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false     # the JSON in git is the dashboard; edit build-dashboard.py, not the UI
+    updateIntervalSeconds: 60
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

@@ -1,0 +1,2619 @@
+{
+ "uid": "onprem-overview",
+ "title": "地端機房總覽",
+ "tags": [
+  "onprem",
+  "day20"
+ ],
+ "timezone": "browser",
+ "editable": false,
+ "graphTooltip": 1,
+ "schemaVersion": 39,
+ "version": 1,
+ "refresh": "30s",
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "annotations": {
+  "list": [
+   {
+    "name": "告警",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "prometheus"
+    },
+    "enable": true,
+    "iconColor": "red",
+    "expr": "ALERTS{alertstate=\"firing\",severity=\"critical\"}",
+    "step": "60s",
+    "titleFormat": "{{alertname}}",
+    "textFormat": "{{summary}}"
+   }
+  ]
+ },
+ "templating": {
+  "list": []
+ },
+ "panels": [
+  {
+   "id": 1,
+   "type": "row",
+   "title": "現在",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 2,
+   "type": "stat",
+   "title": "firing 的告警",
+   "description": "Prometheus 規則正在 firing 的 critical 數",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 1,
+    "w": 4,
+    "h": 4
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count(ALERTS{alertstate=\"firing\",severity=\"critical\"}) or vector(0)",
+     "refId": "A",
+     "legendFormat": "critical",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "green"
+       },
+       {
+        "value": 1,
+        "color": "red"
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 3,
+   "type": "stat",
+   "title": "warning",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 4,
+    "y": 1,
+    "w": 4,
+    "h": 4
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count(ALERTS{alertstate=\"firing\",severity=\"warning\"}) or vector(0)",
+     "refId": "A",
+     "legendFormat": "warning",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "green"
+       },
+       {
+        "value": 1,
+        "color": "orange"
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 4,
+   "type": "table",
+   "title": "firing 清單",
+   "description": "每一列是一條規則對一組標籤。嚴重度與規則名稱來自 prometheus/rules",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 1,
+    "w": 16,
+    "h": 4
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "ALERTS{alertstate=\"firing\"}",
+     "refId": "A",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false
+    }
+   },
+   "transformations": [
+    {
+     "id": "merge",
+     "options": {}
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "Value": true,
+       "__name__": true,
+       "alertstate": true,
+       "job": true,
+       "instance": true,
+       "site": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "type": "row",
+   "title": "GPU 節點（DGX Spark）",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 5,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 6,
+   "type": "stat",
+   "title": "熱 soak 秒數",
+   "description": "最熱 thermal zone 連續 ≥ 88 °C 的秒數。守護在 240 s 動手，告警在 200 s，差額是 textfile 10 s 加抓取 15 s 的相位差（Day 19）",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 6,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "gb10_soak_seconds",
+     "refId": "A",
+     "legendFormat": "{{node}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "unit": "s",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "green"
+       },
+       {
+        "value": 200,
+        "color": "orange"
+       },
+       {
+        "value": 240,
+        "color": "red"
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 7,
+   "type": "stat",
+   "title": "可用記憶體",
+   "description": "MemAvailable。統一記憶體看不到 GPU 配置，這個數掉到 6 GiB 以下 hw-sample 會警告，3 GiB 以下動手（gb10-ops）",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 6,
+    "y": 6,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "gb10_mem_available_bytes",
+     "refId": "A",
+     "legendFormat": "{{node}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "unit": "bytes",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "red"
+       },
+       {
+        "value": 3221225472,
+        "color": "orange"
+       },
+       {
+        "value": 6442450944,
+        "color": "green"
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 8,
+   "type": "stat",
+   "title": "NV_ERR_NO_MEMORY（24h）",
+   "description": "dmesg 裡 NV_ERR_NO_MEMORY 24 小時內增加的筆數。非零就是統一記憶體耗盡的早期訊號",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 6,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "increase(gb10_nv_err_no_memory_total[24h])",
+     "refId": "A",
+     "legendFormat": "{{node}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "green"
+       },
+       {
+        "value": 1,
+        "color": "red"
+       }
+      ]
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 9,
+   "type": "stat",
+   "title": "HOT 旗標",
+   "description": "hw-sample.py 立的 HOT 旗標，批次工作在階段之間要看它",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 18,
+    "y": 6,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "gb10_hot",
+     "refId": "A",
+     "legendFormat": "{{node}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "green"
+       },
+       {
+        "value": 1,
+        "color": "orange"
+       }
+      ]
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 10,
+   "type": "timeseries",
+   "title": "溫度",
+   "description": "最熱 zone 與 nvidia-smi 的 GPU 溫度。橘線 88 °C 是 soak 門檻",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 11,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "gb10_zone_temp_celsius",
+     "refId": "A",
+     "legendFormat": "zone {{node}}"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "gb10_gpu_temp_celsius",
+     "refId": "B",
+     "legendFormat": "gpu {{node}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "celsius",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000,
+      "thresholdsStyle": {
+       "mode": "line+area"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "transparent"
+       },
+       {
+        "value": 88,
+        "color": "orange"
+       }
+      ]
+     },
+     "max": 100,
+     "min": 30
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 11,
+   "type": "timeseries",
+   "title": "soak 累積",
+   "description": "Day 19 第六節的曲線。15 s 抓取下一次升溫約 15 個點，守護動手時歸零",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 11,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "gb10_soak_seconds",
+     "refId": "A",
+     "legendFormat": "{{node}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "s",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000,
+      "thresholdsStyle": {
+       "mode": "line+area"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "transparent"
+       },
+       {
+        "value": 200,
+        "color": "orange"
+       },
+       {
+        "value": 240,
+        "color": "red"
+       }
+      ]
+     },
+     "max": 300,
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 12,
+   "type": "timeseries",
+   "title": "GPU 功耗",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 19,
+    "w": 12,
+    "h": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "gb10_gpu_power_watts",
+     "refId": "A",
+     "legendFormat": "{{node}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "watt",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 13,
+   "type": "timeseries",
+   "title": "GPU 使用率",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 19,
+    "w": 12,
+    "h": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "gb10_gpu_utilization_percent",
+     "refId": "A",
+     "legendFormat": "{{node}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "percent",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000
+     },
+     "max": 100,
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 14,
+   "type": "row",
+   "title": "儲存（QNAP NAS）",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 25,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 15,
+   "type": "bargauge",
+   "title": "儲存池使用率",
+   "description": "zpool list 的 CAP。80 % 是 ZFS 碎片化的線（Day 14），90 % 以上寫入會明顯變慢",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 26,
+    "w": 8,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "nas_zpool_capacity_percent",
+     "refId": "A",
+     "legendFormat": "{{nas}} {{pool}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "unit": "percent",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "green"
+       },
+       {
+        "value": 80,
+        "color": "orange"
+       },
+       {
+        "value": 90,
+        "color": "red"
+       }
+      ]
+     },
+     "min": 0,
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "displayMode": "lcd",
+    "orientation": "horizontal",
+    "showUnfilled": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "minVizHeight": 16,
+    "maxVizHeight": 32
+   }
+  },
+  {
+   "id": 16,
+   "type": "table",
+   "title": "儲存池狀態",
+   "description": "zpool status 的 state。ONLINE 以外都該有人在處理",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 26,
+    "w": 8,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "nas_zpool_health == 1",
+     "refId": "A",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "state"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "value": null,
+           "color": "green"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false
+    }
+   },
+   "transformations": [
+    {
+     "id": "merge",
+     "options": {}
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "Value": true,
+       "__name__": true,
+       "job": true,
+       "instance": true,
+       "site": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": 17,
+   "type": "timeseries",
+   "title": "磁碟最高溫",
+   "description": "SNMP 的 diskTemperature，每台 NAS 取最高那顆",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 26,
+    "w": 8,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (nas) (qnap_disk_temperature_celsius)",
+     "refId": "A",
+     "legendFormat": "{{nas}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "celsius",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000,
+      "thresholdsStyle": {
+       "mode": "line+area"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "transparent"
+       },
+       {
+        "value": 50,
+        "color": "orange"
+       }
+      ]
+     },
+     "max": 70,
+     "min": 20
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 18,
+   "type": "table",
+   "title": "磁碟",
+   "description": "每顆磁碟的狀態字串與溫度。狀態字串不是 GOOD 時 NasDiskNotGood 會響",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 33,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "qnap_disk_status == 1",
+     "refId": "A",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "qnap_disk_temperature_celsius",
+     "refId": "B",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Value #B"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "value": null,
+           "color": "green"
+          },
+          {
+           "value": 50,
+           "color": "orange"
+          }
+         ]
+        }
+       },
+       {
+        "id": "unit",
+        "value": "celsius"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false
+    }
+   },
+   "transformations": [
+    {
+     "id": "merge",
+     "options": {}
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "Value #A": true,
+       "__name__": true,
+       "job": true,
+       "instance": true,
+       "site": true,
+       "diskSerialNumber": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": 19,
+   "type": "table",
+   "title": "快照",
+   "description": "每個資料集的快照數、最新快照距今天數、快照佔用。Day 17 的政策是每日快照，超過 2 天 NasSnapshotStale 會響",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 33,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "nas_zfs_snapshots",
+     "refId": "A",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "(time() - nas_zfs_snapshot_newest_timestamp) / 86400",
+     "refId": "B",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "nas_zfs_snapshot_used_bytes",
+     "refId": "C",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Value #B"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "value": null,
+           "color": "green"
+          },
+          {
+           "value": 2,
+           "color": "orange"
+          },
+          {
+           "value": 7,
+           "color": "red"
+          }
+         ]
+        }
+       },
+       {
+        "id": "unit",
+        "value": "d"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Value #C"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false
+    }
+   },
+   "transformations": [
+    {
+     "id": "merge",
+     "options": {}
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "__name__": true,
+       "job": true,
+       "instance": true,
+       "site": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": 20,
+   "type": "timeseries",
+   "title": "NAS 溫度",
+   "description": "SNMP 的 CPU 與系統溫度，有快取，看趨勢不看絕對值（Day 19）",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 41,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "qnap_cpu_temperature_celsius",
+     "refId": "A",
+     "legendFormat": "cpu {{nas}}"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "qnap_system_temperature_celsius",
+     "refId": "B",
+     "legendFormat": "system {{nas}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "celsius",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 21,
+   "type": "timeseries",
+   "title": "NAS 網路",
+   "description": "IF-MIB 計數。Day 14 量到的碟組上限約 666 MB/s，網路不是瓶頸時應低於它",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 41,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "rate(ifHCInOctets{ifName!~\"lo.*\"}[5m]) * 8",
+     "refId": "A",
+     "legendFormat": "in {{nas}} {{ifName}}"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "rate(ifHCOutOctets{ifName!~\"lo.*\"}[5m]) * 8",
+     "refId": "B",
+     "legendFormat": "out {{nas}} {{ifName}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "bps",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 22,
+   "type": "timeseries",
+   "title": "風扇",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 41,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "qnap_fan_speed_rpm",
+     "refId": "A",
+     "legendFormat": "{{nas}} fan {{sysFanIndex}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "rotrpm",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 23,
+   "type": "row",
+   "title": "虛擬化（Proxmox VE）",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 47,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 24,
+   "type": "stat",
+   "title": "法定人數",
+   "description": "pvecm status 的 Quorate 旗標。0 時有 HA 資源的節點約 60 秒後自己 fence（Day 15）",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 48,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "pve_quorum_quorate",
+     "refId": "A",
+     "legendFormat": "{{cluster}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "red"
+       },
+       {
+        "value": 1,
+        "color": "green"
+       }
+      ]
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 25,
+   "type": "stat",
+   "title": "在場票數",
+   "description": "Total votes。3 正常，2 是 Day 15 check.sh 的 rc=1，再掉任何一個就失去法定人數",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 4,
+    "y": 48,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "pve_quorum_total_votes",
+     "refId": "A",
+     "legendFormat": "{{cluster}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "red"
+       },
+       {
+        "value": 2,
+        "color": "orange"
+       },
+       {
+        "value": 3,
+        "color": "green"
+       }
+      ]
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 26,
+   "type": "stat",
+   "title": "QDevice 票",
+   "description": "0 多半是 NAS 重開中，Virtualization Station 上的 qnetd 還沒回來",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 48,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "pve_quorum_qdevice_votes",
+     "refId": "A",
+     "legendFormat": "{{cluster}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "orange"
+       },
+       {
+        "value": 1,
+        "color": "green"
+       }
+      ]
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 27,
+   "type": "stat",
+   "title": "節點",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 48,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "pve_up{id=~\"node/.*\"}",
+     "refId": "A",
+     "legendFormat": "{{id}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "red"
+       },
+       {
+        "value": 1,
+        "color": "green"
+       }
+      ]
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 28,
+   "type": "stat",
+   "title": "儲存",
+   "description": "NFS 資料存放區在 NAS 重開時會變 0，約 8 分鐘（Day 15 演練 1）",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 18,
+    "y": 48,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "pve_up{id=~\"storage/.*\"}",
+     "refId": "A",
+     "legendFormat": "{{id}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "red"
+       },
+       {
+        "value": 1,
+        "color": "green"
+       }
+      ]
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 29,
+   "type": "table",
+   "title": "HA 資源",
+   "description": "每個 HA 管理的客體目前的狀態。started 以外的狀態都值得看一眼，error、fence、recovery 會響",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 53,
+    "w": 12,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "pve_ha_state == 1",
+     "refId": "A",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "state"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "value": null,
+           "color": "orange"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false
+    }
+   },
+   "transformations": [
+    {
+     "id": "merge",
+     "options": {}
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "Value": true,
+       "__name__": true,
+       "job": true,
+       "instance": true,
+       "site": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": 30,
+   "type": "timeseries",
+   "title": "執行中的 VM 數",
+   "description": "pve-exporter 兩個節點都回整座叢集，這裡以 instance 去重前先 count，兩條線應各自是常數。pve-exporter 的目標若有兩個，加 instance 過濾（Day 19）",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 53,
+    "w": 12,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count(pve_up{id=~\"qemu/.*|lxc/.*\"} == 1)",
+     "refId": "A",
+     "legendFormat": "running"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count(pve_up{id=~\"qemu/.*|lxc/.*\"})",
+     "refId": "B",
+     "legendFormat": "defined"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 31,
+   "type": "timeseries",
+   "title": "節點 CPU",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 60,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "pve_cpu_usage_ratio{id=~\"node/.*\"}",
+     "refId": "A",
+     "legendFormat": "{{id}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "percentunit",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000
+     },
+     "max": 1,
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 32,
+   "type": "timeseries",
+   "title": "節點記憶體",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 60,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "pve_memory_usage_bytes{id=~\"node/.*\"} / pve_memory_size_bytes{id=~\"node/.*\"}",
+     "refId": "A",
+     "legendFormat": "{{id}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "percentunit",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000
+     },
+     "max": 1,
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 33,
+   "type": "timeseries",
+   "title": "客體磁碟 I/O",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 60,
+    "w": 8,
+    "h": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(rate(pve_disk_read_bytes{id=~\"qemu/.*\"}[5m]))",
+     "refId": "A",
+     "legendFormat": "read"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(rate(pve_disk_write_bytes{id=~\"qemu/.*\"}[5m]))",
+     "refId": "B",
+     "legendFormat": "write"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "Bps",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 34,
+   "type": "row",
+   "title": "還原演練（Day 16 至 18）",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 66,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 35,
+   "type": "stat",
+   "title": "距上次成功還原（天）",
+   "description": "每個演練標籤一格。pve 與 nas 的政策是每月，30 天轉橘。cloud 是每季，90 天轉紅。這一排全綠才叫備份存在",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 67,
+    "w": 24,
+    "h": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "(time() - drill_last_success_timestamp) / 86400",
+     "refId": "A",
+     "legendFormat": "{{source}} {{label}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "unit": "d",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "green"
+       },
+       {
+        "value": 30,
+        "color": "orange"
+       },
+       {
+        "value": 90,
+        "color": "red"
+       }
+      ]
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 36,
+   "type": "table",
+   "title": "最近一次演練",
+   "description": "結果、RTO、RPO、速率。RTO 目標 900 s（Day 16 量到 569 s）",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 72,
+    "w": 14,
+    "h": 8
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "drill_last_result",
+     "refId": "A",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "drill_last_rto_seconds",
+     "refId": "B",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "drill_last_rpo_seconds",
+     "refId": "C",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "drill_last_rate_mib_per_second",
+     "refId": "D",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Value #A"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "value": null,
+           "color": "red"
+          },
+          {
+           "value": 1,
+           "color": "green"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Value #B"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "value": null,
+           "color": "green"
+          },
+          {
+           "value": 900,
+           "color": "orange"
+          }
+         ]
+        }
+       },
+       {
+        "id": "unit",
+        "value": "s"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Value #C"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "s"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Value #D"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "MiBs"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false
+    }
+   },
+   "transformations": [
+    {
+     "id": "merge",
+     "options": {}
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "__name__": true,
+       "job": true,
+       "instance": true,
+       "site": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": 37,
+   "type": "timeseries",
+   "title": "RTO 走勢",
+   "description": "每次演練寫入 drills.jsonl 後 15 分鐘內更新。走勢往上就是還原在變慢",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 14,
+    "y": 72,
+    "w": 10,
+    "h": 8
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "drill_last_rto_seconds",
+     "refId": "A",
+     "legendFormat": "{{source}} {{label}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "s",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000,
+      "thresholdsStyle": {
+       "mode": "line+area"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "transparent"
+       },
+       {
+        "value": 900,
+        "color": "orange"
+       }
+      ]
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 38,
+   "type": "row",
+   "title": "管線",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 80,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 39,
+   "type": "stat",
+   "title": "抓取目標",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 81,
+    "w": 12,
+    "h": 4
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "up",
+     "refId": "A",
+     "legendFormat": "{{job}} {{instance}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "red"
+       },
+       {
+        "value": 1,
+        "color": "green"
+       }
+      ]
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 40,
+   "type": "stat",
+   "title": "textfile 距上次執行",
+   "description": "Day 19 第四節。舊的 .prom 檔會讓數字看起來正常，這一格變橘就是靜默失效",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 81,
+    "w": 12,
+    "h": 4
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (job) (time() - {__name__=~\".*_textfile_last_run_timestamp\"})",
+     "refId": "A",
+     "legendFormat": "{{job}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "unit": "s",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "green"
+       },
+       {
+        "value": 120,
+        "color": "orange"
+       },
+       {
+        "value": 600,
+        "color": "red"
+       }
+      ]
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  }
+ ]
+}

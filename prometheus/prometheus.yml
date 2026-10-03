@@ -11,12 +11,26 @@ global:
 rule_files:
   - rules/*.yml
 
+# Day 20: rules fire into Alertmanager on the compose network.
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
 scrape_configs:
   # Prometheus itself
   - job_name: prometheus
     scrape_interval: 15s
     static_configs:
       - targets: ["localhost:9090"]
+
+  # Day 20: Alertmanager and Grafana health, so a dead alert path is itself an alert.
+  - job_name: alertmanager
+    static_configs:
+      - targets: ["alertmanager:9093"]
+  - job_name: grafana
+    static_configs:
+      - targets: ["grafana:3000"]
 
   # DGX Spark nodes: node_exporter with the textfile collector.
   # 15 s so a 240 s soak budget is seen as 16 samples, not 4.

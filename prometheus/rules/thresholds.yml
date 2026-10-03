@@ -1,0 +1,155 @@
+# Day 20: alerts on the numbers themselves. Day 19's staleness.yml says
+# whether the pipeline is alive; these say whether the site is.
+#
+# Every threshold has a source. The soak budget is 240 s (gb10-ops, Day 12)
+# and the textfile (10 s) plus scrape (15 s) phase lag is up to 25 s
+# (Day 19 section 6.2: guard tripped at 240, Prometheus saw 227), so the
+# alert fires at 200. Memory lines are gb10-ops warn 6 GiB / act 3 GiB.
+# The ZFS 80 % line is Day 14. Drill ages are the policy.md of each repo.
+groups:
+  - name: gb10
+    rules:
+      - alert: Gb10SoakNearBudget
+        expr: gb10_soak_seconds > 200
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.node }} hottest zone above threshold for {{ $value }} s, guard trips at 240"
+          runbook: "Day 12: the guard will kill the hottest process; move or pause the workload first"
+      - alert: Gb10HotFlag
+        expr: gb10_hot == 1
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.node }} HOT flag set by hw-sample for 2m"}
+      - alert: Gb10MemAvailableLow
+        expr: gb10_mem_available_bytes < 6 * 1024 * 1024 * 1024
+        for: 1m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.node }} MemAvailable {{ $value | humanize1024 }}B, guard warns at 6 GiB"}
+      - alert: Gb10MemAvailableCritical
+        expr: gb10_mem_available_bytes < 3 * 1024 * 1024 * 1024
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.node }} MemAvailable {{ $value | humanize1024 }}B, guard acts at 3 GiB"}
+      - alert: Gb10NvErrNoMemory
+        expr: increase(gb10_nv_err_no_memory_total[10m]) > 0
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.node }} logged NV_ERR_NO_MEMORY in the last 10m (unified memory exhaustion, precedes livelock)"}
+      - alert: Gb10TextfileErrors
+        expr: gb10_textfile_errors > 0
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.node }} gb10-textfile has {{ $value }} failing sources"}
+
+  - name: nas
+    rules:
+      - alert: NasPoolAbove80
+        expr: nas_zpool_capacity_percent > 80
+        for: 30m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.nas }} pool {{ $labels.pool }} at {{ $value }} %, ZFS fragmentation line is 80 (Day 14)"}
+      - alert: NasPoolAbove90
+        expr: nas_zpool_capacity_percent > 90
+        for: 10m
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.nas }} pool {{ $labels.pool }} at {{ $value }} %"}
+      - alert: NasPoolNotOnline
+        expr: nas_zpool_health{state!="ONLINE"} == 1
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.nas }} pool {{ $labels.pool }} is {{ $labels.state }}"}
+      # snmp-build.py exposes status strings as a label named after the
+      # metric (value 1). The healthy strings below are the ones seen on the
+      # field NAS; a new string shows up as an alert, which is the point.
+      - alert: NasDiskNotGood
+        expr: qnap_disk_status{qnap_disk_status!="GOOD"} == 1
+        for: 5m
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.nas }} disk {{ $labels.diskIndex }} {{ $labels.diskModel }} is {{ $labels.qnap_disk_status }}"}
+      - alert: NasPoolStatusNotReady
+        expr: qnap_pool_status{qnap_pool_status!="ready"} == 1
+        for: 5m
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.nas }} pool {{ $labels.storagepoolID }} is {{ $labels.qnap_pool_status }}"}
+      - alert: NasDiskHot
+        expr: qnap_disk_temperature_celsius > 50
+        for: 15m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.nas }} disk {{ $labels.diskIndex }} at {{ $value }} °C for 15m"}
+      - alert: NasSnapshotStale
+        expr: (time() - nas_zfs_snapshot_newest_timestamp) > 2 * 86400 and nas_zfs_snapshots > 0
+        for: 1h
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.nas }} {{ $labels.dataset }} newest snapshot is {{ $value | humanizeDuration }} old"}
+      # upsStatus is a free string in QTS-MIB; the healthy value on the field
+      # NAS has to be read once from the first SNMP walk and put here.
+      - alert: NasUpsNotOnline
+        expr: qnap_ups_status{qnap_ups_status!~"(?i)online.*"} == 1
+        for: 1m
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.nas }} UPS reports {{ $labels.qnap_ups_status }}"}
+      - alert: NasTelnetEnabled
+        expr: qnap_service_telnet_enabled == 1
+        for: 10m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.nas }} has Telnet enabled (Day 11 hardening regression)"}
+
+  - name: pve
+    rules:
+      - alert: PveQuorumLost
+        expr: pve_up{id=~"cluster/.*"} == 0
+        labels: {severity: critical}
+        annotations: {summary: "cluster {{ $labels.id }} not quorate, HA nodes will self-fence (Day 15 drill 3)"}
+      - alert: PveNodeOffline
+        expr: pve_up{id=~"node/.*"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.id }} offline"}
+      # From textfile/pve-quorum-textfile.sh, the metric form of Day 15
+      # check.sh exit 1: quorate, but one more loss ends it.
+      - alert: PveVoteMissing
+        expr: pve_quorum_expected_votes - pve_quorum_total_votes > 0
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.cluster }} is missing {{ $value }} vote(s) but still quorate, nothing else may fail now (Day 15 check.sh rc=1)"}
+      - alert: PveQdeviceAbsent
+        expr: pve_quorum_qdevice_votes == 0
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.cluster }} QDevice is not voting (NAS reboot or qnetd down)"}
+      - alert: PveHaResourceError
+        expr: pve_ha_state{state=~"error|fence|recovery"} == 1
+        labels: {severity: critical}
+        annotations: {summary: "HA resource {{ $labels.id }} in state {{ $labels.state }}"}
+      - alert: PveStorageUnavailable
+        expr: pve_up{id=~"storage/.*"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.id }} unavailable (NFS on the NAS?)"}
+      - alert: PveReplicationFailing
+        expr: pve_replication_failed_syncs > 0
+        for: 10m
+        labels: {severity: warning}
+        annotations: {summary: "replication {{ $labels.id }} has {{ $value }} failed syncs"}
+      - alert: PveGuestLockedLong
+        expr: pve_lock_state{state!="suspended"} == 1
+        for: 30m
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.id }} locked ({{ $labels.state }}) for 30m, a backup or migrate may be stuck"}
+
+  - name: drills
+    rules:
+      - alert: DrillFailed
+        expr: drill_last_result == 0
+        labels: {severity: warning}
+        annotations: {summary: "last {{ $labels.source }} drill {{ $labels.label }} failed"}
+      - alert: DrillStale
+        expr: (time() - drill_last_success_timestamp{source=~"pve|nas"}) > 30 * 86400
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.source }} drill {{ $labels.label }} last passed {{ $value | humanizeDuration }} ago, policy is monthly"}
+      - alert: CloudDrillStale
+        expr: (time() - drill_last_success_timestamp{source="cloud"}) > 90 * 86400
+        labels: {severity: warning}
+        annotations: {summary: "cloud drill {{ $labels.label }} last passed {{ $value | humanizeDuration }} ago, policy is quarterly"}
+      - alert: DrillRtoOverTarget
+        expr: drill_last_rto_seconds > 900
+        labels: {severity: info}
+        annotations: {summary: "{{ $labels.source }} drill {{ $labels.label }} RTO {{ $value }} s, target 900 s"}

@@ -5,3 +5,5 @@ prometheus/snmp-auth.yml
 *.mib
 __pycache__/
 *.pyc
+alertmanager/alertmanager.yml
+grafana/admin_password

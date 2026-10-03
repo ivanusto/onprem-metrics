@@ -1,0 +1,68 @@
+# Alertmanager for the collector VM. Copy to alertmanager.yml (gitignored)
+# and fill the SMTP block. One route tree, three ideas:
+#   critical pages now, warning batches for 10 minutes, info goes to a
+#   daily digest; and an inhibit tree so a dead pipeline does not also
+#   page for every number it stopped reporting.
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: "smtp.example.net:587"
+  smtp_from: "alerts@example.net"
+  smtp_auth_username: "alerts@example.net"
+  smtp_auth_password: "CHANGE_ME"
+  smtp_require_tls: true
+
+route:
+  receiver: ops-warning
+  group_by: [alertname, cluster, nas, node]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  routes:
+    - matchers: [severity="critical"]
+      receiver: ops-critical
+      group_wait: 0s
+      repeat_interval: 2h
+    - matchers: [severity="info"]
+      receiver: ops-digest
+      group_wait: 1h
+      group_interval: 24h
+      repeat_interval: 7d
+
+receivers:
+  - name: ops-critical
+    email_configs:
+      - to: "oncall@example.net"
+        send_resolved: true
+  - name: ops-warning
+    email_configs:
+      - to: "ops@example.net"
+        send_resolved: true
+  - name: ops-digest
+    email_configs:
+      - to: "ops@example.net"
+        send_resolved: false
+
+inhibit_rules:
+  # Pipeline dead: do not page for every number the pipeline stopped reporting.
+  - source_matchers: [alertname="TargetDown"]
+    target_matchers: [severity=~"warning|info"]
+    equal: [instance]
+  - source_matchers: [alertname="Gb10TextfileStale"]
+    target_matchers: [alertname=~"Gb10.*"]
+    equal: [instance]
+  - source_matchers: [alertname="NasUnreachable"]
+    target_matchers: [alertname=~"Nas(Pool|Snapshot).*"]
+    equal: [nas]
+  - source_matchers: [alertname="NasSnmpNoData"]
+    target_matchers: [alertname=~"Nas(Disk|UPS|Telnet|PoolStatus).*"]
+    equal: [instance]
+  # Quorum lost already says everything PveVoteMissing and PveQdeviceAbsent would.
+  - source_matchers: [alertname="PveQuorumLost"]
+    target_matchers: [alertname=~"PveVoteMissing|PveQdeviceAbsent|PveHaResourceError|PveStorageUnavailable"]
+  # A critical memory line makes the warning line noise.
+  - source_matchers: [alertname="Gb10MemAvailableCritical"]
+    target_matchers: [alertname="Gb10MemAvailableLow"]
+    equal: [node]
+  - source_matchers: [alertname="NasPoolAbove90"]
+    target_matchers: [alertname="NasPoolAbove80"]
+    equal: [nas, pool]
