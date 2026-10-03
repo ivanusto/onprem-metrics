@@ -45,7 +45,15 @@ else:
 api() { curl -fsS --get "$PROM/api/v1/query" --data-urlencode "query=$1" 2>/dev/null || true; }
 q() { api "$1" | python3 -c "$PARSE" one; }                 # q EXPR -> first value, or -
 qrows() { e=$1; shift; api "$e" | python3 -c "$PARSE" rows "$@"; }  # qrows EXPR LABEL... -> TSV
-rs() { ssh -o BatchMode=yes -o ConnectTimeout=10 "$1" "$2" 2>/dev/null | head -1 | grep . || printf -- '-'; }
+# rs USER@HOST CMD -> first line of output, or -. A host that is one of
+# this machine's own addresses runs CMD locally (no ssh to yourself).
+LOCAL_IPS=" $(hostname -I 2>/dev/null) "
+rs() {
+  case "$LOCAL_IPS" in
+    *" ${1#*@} "*) sh -c "$2" 2>/dev/null ;;
+    *) ssh -o BatchMode=yes -o ConnectTimeout=10 "$1" "$2" 2>/dev/null ;;
+  esac | head -1 | grep . || printf -- '-'
+}
 
 printf '# verify %s\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 printf '## 目標\n\n| job | instance | up | 抓取秒數 | 樣本數 |\n|---|---|---|---|---|\n'
@@ -78,15 +86,19 @@ for spec in $nases; do
   p=$(q "sum(nas_zfs_snapshots{nas=\"$label\"}) or vector(0)")
   t=$(rs "$n" "zfs list -H -t snapshot -o name | grep -vc ':init:'")
   printf '| 快照數（不含 :init:） | %s | %s | %s | `zfs list -t snapshot` |\n' "$label" "$p" "$t"
-  p=$(q "qnap_disk_temperature_celsius{instance=\"$ip\",diskIndex=\"1\"}")
-  t=$(rs "$n" "getsysinfo hdtmp 1 | awk '{print \$1}'")
-  printf '| 磁碟 1 溫度（SNMP） | %s | %s | %s | `getsysinfo hdtmp 1` |\n' "$label" "$p" "$t"
-  p=$(q "qnap_pool_capacity_bytes{instance=\"$ip\",storagepoolIndex=\"1\"}")
-  t=$(rs "$n" "zpool list -Hp -o size zpool1")
-  printf '| 池大小（SNMP 對 zpool） | %s | %s | %s | `zpool list -Hp -o size zpool1` |\n' "$label" "$p" "$t"
+  # getsysinfo needs root for temperatures (it prints 0 or -- as claude),
+  # so the SNMP rows are checked against sources a plain account can read.
+  p=$(q "qnap_disk_count{instance=\"$ip\"}")
+  t=$(rs "$n" 'c=0; i=1; while [ $i -le "$(getsysinfo hdnum)" ]; do [ "$(getsysinfo hdmodel $i)" = "--" ] || c=$((c+1)); i=$((i+1)); done; echo $c')
+  printf '| 磁碟數（SNMP） | %s | %s | %s | `getsysinfo hdmodel N`，不是 -- 的槽位數 |\n' "$label" "$p" "$t"
+  # storagepoolIndex 1 is zpool1 on QuTS hero; size is usable space, so
+  # compare free bytes with zfs, not size with zpool list (raw, with parity)
+  p=$(q "qnap_pool_free_bytes{instance=\"$ip\",storagepoolIndex=\"1\"}")
+  t=$(rs "$n" "zfs get -Hp -o value available zpool1")
+  printf '| 池可用空間 zpool1（SNMP） | %s | %s | %s | `zfs get -Hp available zpool1` |\n' "$label" "$p" "$t"
   p=$(q "qnap_cpu_temperature_celsius{instance=\"$ip\"}")
-  t=$(rs "$n" "getsysinfo cputmp | awk '{print \$1}'")
-  printf '| CPU 溫度（SNMP） | %s | %s | %s | `getsysinfo cputmp` |\n' "$label" "$p" "$t"
+  t=$(rs "$n" 'for d in /sys/class/hwmon/hwmon*; do [ "$(cat $d/name)" = coretemp ] && echo $(( $(cat $d/temp1_input) / 1000 )); done')
+  printf '| CPU 溫度（SNMP） | %s | %s | %s | coretemp `temp1_input`（Package） |\n' "$label" "$p" "$t"
 done
 if [ -n "$pve" ]; then
   ip=${pve#*@}
