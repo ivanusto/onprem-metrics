@@ -25,7 +25,7 @@ PROMTOOL = shutil.which("promtool")
 def promtool_ok(text):
     """promtool check metrics reads the exposition format from stdin."""
     if not PROMTOOL:
-        return True
+        return True, "promtool not installed, skipped"
     r = subprocess.run([PROMTOOL, "check", "metrics"], input=text, capture_output=True, text=True)
     return r.returncode == 0, r.stdout + r.stderr
 

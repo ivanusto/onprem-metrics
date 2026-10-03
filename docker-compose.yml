@@ -1,10 +1,9 @@
-# Collector stack for the PVE VM. Images pinned by digest the Day 3 way;
-# refresh with scripts/pin-images.sh from qpkg-template if they change.
-# (digests below are placeholders: run `docker pull` then
-#  `docker inspect --format '{{index .RepoDigests 0}}' IMAGE` to fill them, 待填)
+# Collector stack for the PVE VM. Images pinned by digest the Day 3 way
+# (multi-arch index digest, checked 2026-10-03 with
+# `docker buildx imagetools inspect IMAGE`); the tag stays for readability.
 services:
   prometheus:
-    image: prom/prometheus:v3.5.0
+    image: prom/prometheus:v3.5.0@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -20,7 +19,7 @@ services:
         limits: {memory: 2g}
 
   pve-exporter:
-    image: prompve/prometheus-pve-exporter:3.5.5
+    image: prompve/prometheus-pve-exporter:3.5.5@sha256:79a5598906697b1a5a006d09f0200528a77c6ff1568faf018539ac65824454df
     volumes:
       - ./prometheus/pve.yml:/etc/prometheus/pve.yml:ro
     # loopback only: Prometheus reaches it over the compose network, and the
@@ -29,7 +28,7 @@ services:
     restart: unless-stopped
 
   snmp-exporter:
-    image: prom/snmp-exporter:v0.29.0
+    image: prom/snmp-exporter:v0.29.0@sha256:272ff087c314fb1e384b7ba7e555f020cc0c072fb23f0dc1d1cb51b48067efdc
     command:
       - --config.file=/etc/snmp_exporter/snmp.yml
       - --config.file=/etc/snmp_exporter/snmp-auth.yml

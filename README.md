@@ -2,19 +2,19 @@
 
 English | [繁體中文](README.zh-TW.md)
 
-One Prometheus for a small on-prem AI lab: two NVIDIA DGX Spark (GB10) nodes, two QNAP NAS on QuTS hero, a three-node Proxmox VE cluster, and the restore drills from the backup days. Standard exporters cover most of it. This repo adds the three things they do not see, as node_exporter textfile collectors, plus the Prometheus config that ties the targets together.
+One Prometheus for a small on-prem AI lab: two NVIDIA DGX Spark (GB10) nodes, two QNAP NAS on QuTS hero, a two-node Proxmox VE cluster with a QDevice, and the restore drills from the backup days. Standard exporters cover most of it. This repo adds the three things they do not see, as node_exporter textfile collectors, plus the Prometheus config that ties the targets together.
 
 | Path | Runs on | What it does |
 |---|---|---|
-| `textfile/gb10-textfile.py` | each DGX Spark, systemd timer every 10 s | Hottest thermal zone, GPU temp/power/util, **thermal soak seconds** (continuous time at or above 88 C), `NV_ERR_NO_MEMORY` count from dmesg, MemAvailable, the HOT flag from gb10-ops. Soak state survives between runs; a timer gap resets it |
-| `prometheus/snmp-build.py` and `prometheus/snmp.yml` | collector VM | Builds the snmp_exporter module from QNAP's QTS-MIB (enterprises 55062, QuTS hero) without the generator: disks and temperature, SMART attributes, RAID, pools, shared folders (WORM, compression, dedup), fans, CPU and system temperature, CPU and memory, UPS, firmware, exposed services, installed apps, plus IF-MIB interface counters. SNMP v3 authPriv only, auth in `snmp-auth.yml` (gitignored) |
-| `textfile/nas-textfile.sh` | the collector host, cron every minute | Over ssh to each NAS, only what the MIB does not have: ZFS pool list by name, dataset used, snapshots per dataset (count, newest, oldest, bytes), HBS 3 installed. Nothing is installed on the NAS |
+| `textfile/gb10-textfile.py` | each DGX Spark, systemd timer every 10 s | Hottest thermal zone, GPU temp/power/util, **thermal soak seconds** (continuous time at or above 88 C), `NV_ERR_NO_MEMORY` count from dmesg, MemAvailable, the HOT flag from gb10-ops `hw-sample.py` (present only while hw-sample runs with `--hot-flag /run/gb10/HOT`). Soak state survives between runs; a timer gap resets it |
+| `prometheus/snmp-build.py` and `prometheus/snmp.yml` | collector VM | Builds the snmp_exporter module from QNAP's QTS-MIB (enterprises 55062, QuTS hero) without the generator: disks and temperature, SMART attributes, RAID, pools, shared folders (WORM, compression, dedup), fans, CPU and system temperature, CPU and memory, UPS, firmware, exposed services, installed apps, plus IF-MIB interface counters. SNMP v3 only; the example is authPriv (SHA, AES), and `security_level` and the protocols must match what the NAS actually has. Auth in `snmp-auth.yml` (gitignored) |
+| `textfile/nas-textfile.sh` | the collector host, cron every minute | Takes `LABEL=user@host`, so the `nas` label matches the SNMP target's `nas`. Over ssh to each NAS, only what the MIB does not have: ZFS pool list by name, dataset used, snapshots per dataset (count, newest, oldest, bytes), HBS 3 installed. Nothing is installed on the NAS |
 | `textfile/drills-textfile.py` | the collector host, cron every 15 min | Reads `drills.jsonl` from pve-backup-drill, nas-backup-drill and cloud-offload-drill, exposes the latest drill per label: timestamp, result, RTO, RPO, rate, last success |
 | `prometheus/` | collector VM | `prometheus.yml` with three intervals (15 s GPU nodes, 60 s NAS and PVE), file_sd target files (`.example` committed, real ones ignored), `pve.yml.example` for prometheus-pve-exporter, `rules/staleness.yml` for pipeline-alive alerts |
-| `docker-compose.yml` | collector VM | Prometheus 3.5 with 90 d retention plus pve-exporter; snmp-exporter commented out until SNMP is on |
+| `docker-compose.yml` | collector VM | Prometheus 3.5 with 90 d retention, pve-exporter and snmp-exporter, images pinned by digest. Both exporters publish on 127.0.0.1 only, for curl from the host |
 | `systemd/` | DGX Spark and collector | node_exporter unit, gb10-textfile service and timer, cron.d lines for the collector |
-| `install-node.sh` | each DGX Spark | Downloads node_exporter (arm64 or amd64), verifies sha256 against the release, installs the units |
-| `verify.sh` | anywhere with curl and ssh | `up` and scrape duration per target, one Prometheus value next to the original tool's value per source, the drill table |
+| `install-node.sh` | each DGX Spark; `--collector` on the collector | Downloads node_exporter (arm64 or amd64), verifies sha256 against the release, installs the units. DGX Spark mode also installs gb10-textfile and `/run/gb10` (tmpfiles.d); `--collector` installs node_exporter and the textfile directory only |
+| `verify.sh` | anywhere with curl, ssh and python3 | `up`, scrape duration and samples per target, one Prometheus value next to the original tool's value per source, the drill table. On the NAS it only reads what a plain account can (`getsysinfo` temperatures need root) |
 | `tests/` | CI | Fake sysfs, nvidia-smi, dmesg, zfs, zpool, getsysinfo; every output is checked with `promtool check metrics` |
 
 ## Why SNMP for hardware and ssh for ZFS
@@ -34,16 +34,27 @@ cp prometheus/targets/collector.yml.example prometheus/targets/collector.yml
 cp prometheus/targets/pve.yml.example prometheus/targets/pve.yml
 cp prometheus/targets/nas-snmp.yml.example prometheus/targets/nas-snmp.yml
 cp prometheus/pve.yml.example prometheus/pve.yml                           # token
-cp prometheus/snmp-auth.yml.example prometheus/snmp-auth.yml               # SNMP v3 passphrases
+cp prometheus/snmp-auth.yml.example prometheus/snmp-auth.yml               # SNMP v3 passphrases, 8 characters or more
+sudo chown root:101 prometheus/pve.yml && sudo chmod 640 prometheus/pve.yml               # pve-exporter runs as uid/gid 101
+sudo chown root:65534 prometheus/snmp-auth.yml && sudo chmod 640 prometheus/snmp-auth.yml # snmp-exporter runs as nobody
 promtool check config prometheus/prometheus.yml
 docker compose up -d
+sudo ./install-node.sh --collector
 sudo install -m 0644 systemd/collector.cron /etc/cron.d/onprem-metrics    # edit hosts and paths
+
+# first SNMP walk: which OIDs does the real box answer
+curl 'http://localhost:9116/snmp?module=qnap&auth=nas_v3&target=192.168.2.2'
 
 # each DGX Spark
 sudo ./install-node.sh
+sudo ufw allow proto tcp from 192.168.2.49 to any port 9100   # collector only
+curl -s localhost:9100/metrics | grep ^gb10_
 
 # then
-PROM=http://collector:9090 ./verify.sh --gb10 user@spark1 --nas claude@nas1 --pve root@pve1 > verify.md
+PROM=http://192.168.2.49:9090 ./verify.sh \
+  --gb10 user@192.168.2.131 --gb10 user@192.168.2.141 \
+  --nas primary=claude@192.168.2.2 --nas secondary=claude@192.168.2.22 \
+  --pve root@192.168.2.9 > verify.md
 ```
 
 ## Metrics added
