@@ -18,6 +18,13 @@ groups:
         for: 5m
         labels: {severity: warning}
         annotations: {summary: "nas-textfile for {{ $labels.nas }} is older than 10 minutes"}
+      # An SNMP auth or protocol mismatch still answers HTTP 200, so up stays
+      # 1; only the exporter's own snmp_scrape_* (5 samples) come back.
+      - alert: NasSnmpNoData
+        expr: scrape_samples_scraped{job="nas-snmp"} < 50
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "SNMP on {{ $labels.instance }} returns no NAS data (check v3 auth and priv settings)"}
       - alert: NasUnreachable
         expr: nas_up == 0
         for: 5m
