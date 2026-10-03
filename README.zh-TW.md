@@ -7,7 +7,7 @@
 | 路徑 | 跑在哪 | 做什麼 |
 |---|---|---|
 | `textfile/gb10-textfile.py` | 每台 DGX Spark，systemd timer 每 10 秒 | 最熱的 thermal zone、GPU 溫度與功耗與使用率、**熱 soak 秒數**（88 度以上連續秒數）、dmesg 的 `NV_ERR_NO_MEMORY` 計數、MemAvailable、gb10-ops `hw-sample.py` 的 HOT 旗標（只有 hw-sample 以 `--hot-flag /run/gb10/HOT` 在跑時才會出現）。soak 狀態跨次保存，timer 斷掉就歸零 |
-| `prometheus/snmp-build.py` 與 `prometheus/snmp.yml` | 收集端 VM | 不靠 generator，直接從 QNAP 的 QTS-MIB（enterprises 55062，QuTS hero）解析 OID 產生 snmp_exporter 模組。磁碟與溫度、SMART 屬性、RAID、儲存池、共享資料夾（WORM、壓縮、去重）、風扇、CPU 與系統溫度、CPU 與記憶體、UPS、韌體、對外服務、已安裝套件，加上 IF-MIB 的網卡計數。只用 SNMP v3，範例是 authPriv（SHA、AES），`security_level` 與協定要跟 NAS 上實際生效的一致，認證放 `snmp-auth.yml`（不入庫） |
+| `prometheus/snmp-build.py` 與 `prometheus/snmp.yml` | 收集端 VM | 不靠 generator，直接從 QNAP 的 QTS-MIB（enterprises 55062，QuTS hero）解析 OID 產生 snmp_exporter 模組。磁碟與溫度、SMART 屬性、RAID、儲存池、共享資料夾（WORM、壓縮、去重）、風扇、CPU 與系統溫度、CPU 與記憶體、UPS、韌體、對外服務、已安裝套件，加上 IF-MIB 的網卡計數。只用 SNMP v3，範例是 authPriv（SHA、DES，QuTS hero 6.0.2 介面能選的最高組合），`security_level` 與協定要跟 NAS 上實際生效的一致，認證放 `snmp-auth.yml`（不入庫） |
 | `textfile/nas-textfile.sh` | 收集端主機，cron 每分鐘 | 參數是 `LABEL=user@host`，`nas` 標籤與 SNMP 目標的 `nas` 對得起來。經 ssh 到每台 NAS，只收 MIB 沒有的東西，依名稱列的 ZFS 池、資料集已用、每資料集快照數與最新最舊時間與佔用、HBS 3 是否安裝。NAS 上不裝任何東西 |
 | `textfile/drills-textfile.py` | 收集端主機，cron 每 15 分鐘 | 讀 pve-backup-drill、nas-backup-drill、cloud-offload-drill 的 `drills.jsonl`，每個演練標籤只留最近一次，時間、結果、RTO、RPO、速率、最近一次成功 |
 | `prometheus/` | 收集端 VM | `prometheus.yml` 三種間隔（GPU 節點 15 秒，NAS 與 PVE 60 秒），file_sd 目標檔（`.example` 入庫，真實檔忽略），pve-exporter 的 `pve.yml.example`，`rules/staleness.yml` 的管線存活告警 |
