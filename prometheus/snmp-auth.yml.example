@@ -1,6 +1,9 @@
 # Copy to snmp-auth.yml (gitignored). SNMP v3 only, authPriv.
 # The user "claude" was created on both NAS; protocols must match what
 # the NAS was set to (QTS offers MD5/SHA and DES/AES; use SHA + AES).
+# Check what is in effect, not what you meant to set: on QuTS hero 6.0.2
+# "Priv Protocol = 0" in /etc/config/uLinux.conf [SNMP] is DES. A mismatch
+# still gives up == 1 with only 5 samples; see NasSnmpNoData.
 auths:
   nas_v3:
     version: 3
