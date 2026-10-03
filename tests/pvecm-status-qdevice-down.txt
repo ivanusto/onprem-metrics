@@ -7,7 +7,7 @@ Secure auth:      on
 
 Quorum information
 ------------------
-Date:             Sat Oct  3 15:34:21 2026
+Date:             Sat Oct  3 16:14:07 2026
 Quorum provider:  corosync_votequorum
 Nodes:            2
 Node ID:          0x00000001
@@ -24,6 +24,6 @@ Flags:            Quorate
 
 Membership information
 ----------------------
-    Nodeid      Votes    Qdevice Name
-0x00000001          1    A,NV,NMW 192.168.2.9 (local)
-0x00000003          1    A,NV,NMW 192.168.2.5
+    Nodeid      Votes Name
+0x00000001          1 192.168.2.9 (local)
+0x00000003          1 192.168.2.5

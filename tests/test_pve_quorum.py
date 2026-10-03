@@ -45,13 +45,17 @@ class PveQuorum(unittest.TestCase):
         self.assertTrue(ok, msg)
 
     def test_qdevice_down(self):
-        """corosync-qdevice stopped on both nodes: one vote short, still quorate."""
+        """Field output with corosync-qdevice stopped on both nodes (Day 20 T3)."""
         rc, out = run(stdin=(FIXTURES / "pvecm-status-qdevice-down.txt").read_text())
         s = samples(out)
         self.assertEqual(s['pve_quorum_expected_votes{cluster="lab"}'], "3")
         self.assertEqual(s['pve_quorum_total_votes{cluster="lab"}'], "2")
         self.assertEqual(s['pve_quorum_quorate{cluster="lab"}'], "1")
         self.assertEqual(s['pve_quorum_qdevice_votes{cluster="lab"}'], "0")
+        # the Qdevice flags column disappears with the daemon; node names must not shift
+        self.assertEqual(s['pve_quorum_node_votes{cluster="lab",node="192.168.2.9"}'], "1")
+        self.assertEqual(s['pve_quorum_node_votes{cluster="lab",node="192.168.2.5"}'], "1")
+        self.assertFalse([k for k in s if 'node=""' in k or "(local)" in k])
 
     def test_empty_input_is_down(self):
         rc, out = run(stdin="")

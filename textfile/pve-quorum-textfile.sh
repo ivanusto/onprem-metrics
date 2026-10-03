@@ -36,10 +36,14 @@ parse() { # stdin: pvecm status  $1: label
     /^Quorum:/         { q = $2 }
     /^Flags:/          { quorate = ($0 ~ /Quorate/) ? 1 : 0 }
     /^Name:/           { if (name == "") name = $2 }
-    # membership rows: 0x00000001 1 A,V,NMW 192.168.2.9 (local)  /  0x00000000 1 Qdevice
+    # membership rows. With a QDevice configured and connected there is a
+    # flags column:  0x00000001 1 A,V,NMW 192.168.2.9 (local)
+    #                0x00000000 1 Qdevice
+    # When corosync-qdevice is not running the column is gone altogether:
+    #                0x00000001 1 192.168.2.9 (local)
     /^0x[0-9a-f]+[ \t]+[0-9]+/ {
       if ($3 == "Qdevice") qd = $2
-      else { node = $4; votes[node] = $2 }
+      else { node = ($3 ~ /^N?A,N?V,N?MW$/) ? $4 : $3; votes[node] = $2 }
     }
     END {
       if (L == "") L = (name == "") ? "pve" : name
