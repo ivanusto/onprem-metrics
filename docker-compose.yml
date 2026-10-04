@@ -67,6 +67,11 @@ services:
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
       GF_SERVER_ROOT_URL: http://localhost:3000
+      # Grafana 12 preinstalls four app plugins from the catalog at every
+      # start and keeps them auto-updated, which unpins what the digest
+      # above pins (seen on the collector, Day 21). Plugins this stack needs
+      # are baked into an image instead (onprem-logs/grafana/Dockerfile).
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro

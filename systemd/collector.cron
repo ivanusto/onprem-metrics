@@ -1,7 +1,7 @@
 # /etc/cron.d/onprem-metrics on the collector host. Output goes through a
 # temp file so node_exporter never reads a half-written .prom.
 * * * * * metrics /opt/onprem-metrics/textfile/nas-textfile.sh primary=claude@192.168.2.2 secondary=claude@192.168.2.22 > /var/lib/node_exporter/textfile/.nas.tmp && mv /var/lib/node_exporter/textfile/.nas.tmp /var/lib/node_exporter/textfile/nas.prom
-*/15 * * * * metrics /opt/onprem-metrics/textfile/drills-textfile.py --out /var/lib/node_exporter/textfile/drills.prom pve=/srv/drills/pve-backup-drill/drills.jsonl nas=/srv/drills/nas-backup-drill/drills.jsonl cloud=/srv/drills/cloud-offload-drill/drills.jsonl
+*/15 * * * * metrics /opt/onprem-metrics/textfile/drills-textfile.py --out /var/lib/node_exporter/textfile/drills.prom pve=/srv/drills/pve-backup-drill/drills.jsonl nas=/srv/drills/nas-backup-drill/drills.jsonl cloud=/srv/drills/cloud-offload-drill/drills.jsonl logs=/srv/drills/onprem-logs/drills.jsonl
 # Day 20: corosync votes, one entry per cluster, nodes tried in order. The key
 # logs in as root (pvecm needs it) and is restricted with command="/usr/bin/pvecm status".
 * * * * * metrics /opt/onprem-metrics/textfile/pve-quorum-textfile.sh lab=root@192.168.2.9,root@192.168.2.5 > /var/lib/node_exporter/textfile/.pve-quorum.tmp && mv /var/lib/node_exporter/textfile/.pve-quorum.tmp /var/lib/node_exporter/textfile/pve-quorum.prom

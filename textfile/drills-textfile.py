@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Turn the drills.jsonl files from Day 16, 17 and 18 into textfile metrics.
+onprem-logs (Day 21) adds a fourth, the daily archive verify, as source=logs;
+a source whose file does not exist yet is skipped.
 
 Each drill repo appends one JSON object per drill. The three formats differ
 a little, so this script normalises them:
@@ -22,7 +24,8 @@ alerts when that passes the policy (Day 16: monthly; Day 18: monthly).
     drills-textfile.py --out /var/lib/node_exporter/textfile/drills.prom \
         pve=/srv/drills/pve-backup-drill/drills.jsonl \
         nas=/srv/drills/nas-backup-drill/drills.jsonl \
-        cloud=/srv/drills/cloud-offload-drill/drills.jsonl
+        cloud=/srv/drills/cloud-offload-drill/drills.jsonl \
+        logs=/srv/drills/onprem-logs/drills.jsonl
 
 Metrics
     drill_last_timestamp{source,label}        unix time of the last drill

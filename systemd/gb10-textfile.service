@@ -13,4 +13,8 @@ ProtectSystem=strict
 ProtectHome=yes
 ReadWritePaths=/var/lib/node_exporter/textfile /var/lib/gb10-textfile
 StateDirectory=gb10-textfile
+# Every 10 s run makes PID 1 log Starting/Finished/Deactivated about this
+# unit at info level, about 23,000 lines a day per node (Day 21). notice
+# keeps failures ("Failed with result", non-zero exit) and drops the rest.
+LogLevelMax=notice
 ExecStart=/usr/local/bin/gb10-textfile.py --out /var/lib/node_exporter/textfile/gb10.prom --state /var/lib/gb10-textfile/state.json

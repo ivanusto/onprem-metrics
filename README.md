@@ -9,7 +9,7 @@ One Prometheus for a small on-prem AI lab: two NVIDIA DGX Spark (GB10) nodes, tw
 | `textfile/gb10-textfile.py` | each DGX Spark, systemd timer every 10 s | Hottest thermal zone, GPU temp/power/util, **thermal soak seconds** (continuous time at or above 88 C), `NV_ERR_NO_MEMORY` count from dmesg, MemAvailable, the HOT flag from gb10-ops `hw-sample.py` (present only while hw-sample runs with `--hot-flag /run/gb10/HOT`). Soak state survives between runs; a timer gap resets it |
 | `prometheus/snmp-build.py` and `prometheus/snmp.yml` | collector VM | Builds the snmp_exporter module from QNAP's QTS-MIB (enterprises 55062, QuTS hero) without the generator: disks and temperature, SMART attributes, RAID, pools, shared folders (WORM, compression, dedup), fans, CPU and system temperature, CPU and memory, UPS, firmware, exposed services, installed apps, plus IF-MIB interface counters. SNMP v3 only; the example is authPriv (SHA, DES, the most QuTS hero 6.0.2 offers), and `security_level` and the protocols must match what the NAS actually has. Auth in `snmp-auth.yml` (gitignored) |
 | `textfile/nas-textfile.sh` | the collector host, cron every minute | Takes `LABEL=user@host`, so the `nas` label matches the SNMP target's `nas`. Over ssh to each NAS, only what the MIB does not have: ZFS pool list by name, dataset used, snapshots per dataset (count, newest, oldest, bytes), HBS 3 installed. Nothing is installed on the NAS |
-| `textfile/drills-textfile.py` | the collector host, cron every 15 min | Reads `drills.jsonl` from pve-backup-drill, nas-backup-drill and cloud-offload-drill, exposes the latest drill per label: timestamp, result, RTO, RPO, rate, last success |
+| `textfile/drills-textfile.py` | the collector host, cron every 15 min | Reads `drills.jsonl` from pve-backup-drill, nas-backup-drill, cloud-offload-drill and the daily archive verify of onprem-logs, exposes the latest drill per label: timestamp, result, RTO, RPO, rate, last success |
 | `prometheus/` | collector VM | `prometheus.yml` with three intervals (15 s GPU nodes, 60 s NAS and PVE), file_sd target files (`.example` committed, real ones ignored), `pve.yml.example` for prometheus-pve-exporter, `rules/staleness.yml` for pipeline-alive alerts |
 | `docker-compose.yml` | collector VM | Prometheus 3.5 with 90 d retention, pve-exporter, snmp-exporter, Alertmanager and Grafana, images pinned by digest. Grafana on :3000 is the only port open to the LAN; Prometheus, Alertmanager and the exporters publish on 127.0.0.1 only |
 | `systemd/` | DGX Spark and collector | node_exporter unit, gb10-textfile service and timer, cron.d lines for the collector |
@@ -53,10 +53,17 @@ docker compose up -d
 # Grafana reads the password only when it creates its database. If the file was
 # unreadable on the first start, the admin password is "admin": fix the owner,
 # then `docker compose rm -sf grafana && docker volume rm <project>_grafana-data`.
+# GF_PLUGINS_PREINSTALL_DISABLED keeps Grafana from fetching catalog plugins
+# at start; onprem-logs builds an image with its datasource plugin baked in
+# and points this service at it.
 
 # PVE quorum: one line in /root/.ssh/authorized_keys on a node (it is
 # /etc/pve/priv/authorized_keys, shared by the whole cluster)
 #   from="COLLECTOR_IP",command="/usr/bin/pvecm status",restrict ssh-ed25519 AAAA... metrics@collector
+# and on every PVE node, so the per-minute login does not start and stop a
+# whole root user manager each time (about 75 journal lines per login,
+# 108,000 a day, measured on Day 21):
+#   loginctl enable-linger root
 sudo -u metrics ./textfile/pve-quorum-textfile.sh lab=root@192.168.2.9,root@192.168.2.5 | promtool check metrics
 
 # first SNMP walk: which OIDs does the real box answer
