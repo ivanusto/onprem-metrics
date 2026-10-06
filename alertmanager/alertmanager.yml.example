@@ -55,6 +55,9 @@ inhibit_rules:
   - source_matchers: [alertname="Gb10TextfileStale"]
     target_matchers: [alertname=~"Gb10.*"]
     equal: [instance]
+  # fw-report stopped: its numbers are old, do not alert on them (Day 22).
+  - source_matchers: [alertname="FwReportStale"]
+    target_matchers: [alertname=~"Fw.*|NasLogin.*"]
   - source_matchers: [alertname="NasUnreachable"]
     target_matchers: [alertname=~"Nas(Pool|Snapshot).*"]
     equal: [nas]

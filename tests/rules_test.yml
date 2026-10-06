@@ -7,6 +7,7 @@
 rule_files:
   - ../prometheus/rules/thresholds.yml
   - ../prometheus/rules/staleness.yml
+  - ../prometheus/rules/firewall.yml
 
 evaluation_interval: 15s
 
@@ -234,3 +235,74 @@ tests:
         exp_alerts:
           - exp_labels: {severity: warning, job: collector-host, cluster: lab}
             exp_annotations: {summary: "pve-quorum-textfile cannot read pvecm status for lab on any listed node (key, from= or node down)"}
+
+  # Day 22 firewall. fw-report runs every 10 minutes but node_exporter is
+  # scraped every minute, so the series has a sample every minute. An
+  # expected wall that drops nothing is written as 0 and goes silent after
+  # 2 hours; one that keeps dropping stays quiet.
+  - interval: 1m
+    input_series:
+      - series: 'fw_blocked{job="collector-host",source="fortigate",host="fgt-edge"}'
+        values: "2500 0x150"
+      - series: 'fw_blocked{job="collector-host",source="docker-user",host="metrics"}'
+        values: "4x150"
+    alert_rule_test:
+      - eval_time: 1h50m
+        alertname: FwSilent
+        exp_alerts: []
+      - eval_time: 2h10m
+        alertname: FwSilent
+        exp_alerts:
+          - exp_labels: {severity: info, job: collector-host, source: fortigate, host: fgt-edge}
+            exp_annotations: {summary: "fgt-edge logged no dropped packets for 2 hours, check that logging and the syslog target are on (fortigate)"}
+
+  # The burst threshold depends on the wall: 150 an hour is a pinned ufw
+  # limit, and nothing at all for the FortiGate's busiest camera.
+  - interval: 1m
+    input_series:
+      - series: 'fw_top_source_blocked{job="collector-host",source="ufw",host="spark02",src="192.168.2.50"}'
+        values: "150x20"
+      - series: 'fw_top_source_blocked{job="collector-host",source="fortigate",host="fgt-edge",src="192.168.2.121"}'
+        values: "1800x20"
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: FwSourceBurst
+        exp_alerts:
+          - exp_labels: {severity: warning, job: collector-host, source: ufw, host: spark02, src: "192.168.2.50"}
+            exp_annotations: {summary: "spark02 dropped 150 packets from 192.168.2.50 in the last hour (ufw)"}
+
+  # Slow guessing under the NAS ban: 10 an hour warns, 50 is critical.
+  - interval: 1m
+    input_series:
+      - series: 'nas_login_failed_top_source{job="collector-host",nas="nas-primary",src="192.168.2.88"}'
+        values: "4x9 12x10 60x10"
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: NasLoginFailures
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: NasLoginFailures
+        exp_alerts:
+          - exp_labels: {severity: warning, job: collector-host, nas: nas-primary, src: "192.168.2.88"}
+            exp_annotations: {summary: "nas-primary: 12 failed logins from 192.168.2.88 in the last hour"}
+      - eval_time: 25m
+        alertname: NasLoginFailuresCritical
+        exp_alerts:
+          - exp_labels: {severity: critical, job: collector-host, nas: nas-primary, src: "192.168.2.88"}
+            exp_annotations: {summary: "nas-primary: 60 failed logins from 192.168.2.88 in the last hour, the ban is not holding; block the source upstream"}
+
+  # fw-report itself stopped (timestamp stuck at 0): stale after 30 minutes
+  # plus the 10 minute hold.
+  - interval: 1m
+    input_series:
+      - series: 'fw_report_last_run_timestamp{job="collector-host"}'
+        values: "0x60"
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: FwReportStale
+        exp_alerts: []
+      - eval_time: 50m
+        alertname: FwReportStale
+        exp_alerts:
+          - exp_labels: {severity: warning, job: collector-host}
+            exp_annotations: {summary: "fw-report has not run for 30 minutes, firewall metrics are stale"}

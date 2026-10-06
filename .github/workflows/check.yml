@@ -20,7 +20,7 @@ jobs:
           tar xzf p.tgz && sudo install -m 0755 prometheus-3.5.0.linux-amd64/promtool /usr/local/bin/promtool
       - run: shellcheck textfile/nas-textfile.sh textfile/pve-quorum-textfile.sh verify.sh install-node.sh tests/fake-nas.sh
       - run: promtool check config prometheus/prometheus.yml
-      - run: promtool check rules prometheus/rules/staleness.yml prometheus/rules/thresholds.yml
+      - run: promtool check rules prometheus/rules/staleness.yml prometheus/rules/thresholds.yml prometheus/rules/firewall.yml
       - run: cd tests && promtool test rules rules_test.yml
       - name: amtool check-config
         run: |
