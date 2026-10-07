@@ -1653,8 +1653,8 @@
   {
    "id": 23,
    "type": "timeseries",
-   "title": "記憶體碎裂（空閒記憶體中 2 MiB 以上區塊的比例）",
-   "description": "由 /proc/buddyinfo 算出 Normal zone 的空閒記憶體有多少還是 order 9 以上的連續區塊。NVIDIA 驅動要實體連續的記憶體，碎裂時重啟 GPU 容器會 NV_ERR_NO_MEMORY。出圖時這條線本來就會掉到 0，工作結束幾分鐘內會回升；碎裂的特徵是閒置也回不來。6 小時內從未回到 2% 以上且空閒超過 1 GiB，NasMemoryFragmented 會響，處理方式是找空檔重開 NAS",
+   "title": "記憶體碎裂（Normal zone 512 KiB 以上的空閒區塊數）",
+   "description": "由 /proc/buddyinfo 加總 order 7 以上（512 KiB 以上）的空閒區塊。NVIDIA 驅動要實體連續的記憶體，碎裂時重啟 GPU 容器會 NV_ERR_NO_MEMORY。出圖時這條線掉到 0 是正常的，閒置時應該還有一些；碎裂的特徵是閒置也一直是 0。6 小時內從未出現過任何一塊、且空閒超過 1 GiB 時，NasMemoryFragmented 會響，處理方式是找空檔重開 NAS。重建 ComfyUI 容器會讓這條線暫時跳高，不代表碎裂解除",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -1671,9 +1671,9 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "nas_memory_free_highorder_ratio{zone=\"Normal\"}",
+     "expr": "sum by (nas) (nas_buddyinfo_free_blocks{zone=\"Normal\",order=~\"7|8|9|10\"})",
      "refId": "A",
-     "legendFormat": "比例 {{nas}}"
+     "legendFormat": "{{nas}}"
     }
    ],
    "fieldConfig": {
@@ -1681,30 +1681,12 @@
      "color": {
       "mode": "palette-classic"
      },
-     "unit": "percentunit",
      "custom": {
       "lineWidth": 1,
       "fillOpacity": 8,
       "showPoints": "never",
-      "spanNulls": 60000,
-      "thresholdsStyle": {
-       "mode": "line+area"
-      }
+      "spanNulls": 60000
      },
-     "thresholds": {
-      "mode": "absolute",
-      "steps": [
-       {
-        "value": null,
-        "color": "transparent"
-       },
-       {
-        "value": 0.02,
-        "color": "orange"
-       }
-      ]
-     },
-     "max": 1,
      "min": 0
     },
     "overrides": []

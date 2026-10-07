@@ -19,7 +19,6 @@ SOAK_WARN, SOAK_BUDGET = 180, 240
 MEM_WARN, MEM_CRIT = 6 * 1024 ** 3, 3 * 1024 ** 3
 POOL_WARN, POOL_CRIT = 80, 90
 DISK_TEMP_WARN = 50
-FRAG_WARN = 0.02  # NasMemoryFragmented: share of free Normal-zone memory in order 9 and up
 DRILL_STALE_DAYS, CLOUD_DRILL_STALE_DAYS = 30, 90
 RTO_TARGET = 900
 
@@ -274,10 +273,10 @@ def build():
                 unit="bps", desc="IF-MIB 計數，只看實體埠與 bond。Day 14 量到的碟組上限約 666 MB/s，網路不是瓶頸時應低於它"))
     P.append(ts("風扇", 16, y, 8, 6, [target("qnap_fan_speed_rpm", "{{nas}} fan {{sysFanIndex}}")], unit="rotrpm"))
     y += 6
-    P.append(ts("記憶體碎裂（空閒記憶體中 2 MiB 以上區塊的比例）", 0, y, 16, 7,
-                [target('nas_memory_free_highorder_ratio{zone="Normal"}', "比例 {{nas}}")],
-                unit="percentunit", lines=((FRAG_WARN, "orange"),), minv=0, maxv=1,
-                desc=f"由 /proc/buddyinfo 算出 Normal zone 的空閒記憶體有多少還是 order 9 以上的連續區塊。NVIDIA 驅動要實體連續的記憶體，碎裂時重啟 GPU 容器會 NV_ERR_NO_MEMORY。出圖時這條線本來就會掉到 0，工作結束幾分鐘內會回升；碎裂的特徵是閒置也回不來。6 小時內從未回到 {FRAG_WARN:.0%} 以上且空閒超過 1 GiB，NasMemoryFragmented 會響，處理方式是找空檔重開 NAS"))
+    P.append(ts("記憶體碎裂（Normal zone 512 KiB 以上的空閒區塊數）", 0, y, 16, 7,
+                [target('sum by (nas) (nas_buddyinfo_free_blocks{zone="Normal",order=~"7|8|9|10"})', "{{nas}}")],
+                minv=0,
+                desc="由 /proc/buddyinfo 加總 order 7 以上（512 KiB 以上）的空閒區塊。NVIDIA 驅動要實體連續的記憶體，碎裂時重啟 GPU 容器會 NV_ERR_NO_MEMORY。出圖時這條線掉到 0 是正常的，閒置時應該還有一些；碎裂的特徵是閒置也一直是 0。6 小時內從未出現過任何一塊、且空閒超過 1 GiB 時，NasMemoryFragmented 會響，處理方式是找空檔重開 NAS。重建 ComfyUI 容器會讓這條線暫時跳高，不代表碎裂解除"))
     P.append(stat("開機天數", 16, y, 8, 7, "(time() - nas_boot_time_seconds) / 86400", "{{nas}}", unit="d", decimals=1,
                   desc="碎裂隨開機時間累積，對照上圖看衰退速度"))
     y += 7

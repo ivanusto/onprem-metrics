@@ -121,25 +121,27 @@ groups:
       # drop_caches plus compact_memory did not bring the blocks back; a
       # reboot did.
       #
-      # The rule reads the share of free memory in order 9 and up, not the
-      # block count, and asks whether it ever recovered within 6 hours. Both
-      # matter. The count falls whenever memory is in use: an hour after a
-      # reboot, with models loaded and the ARC filling, order 9+10 went from
-      # 7281 blocks to 313. The share also dips to 0 % while a GPU job runs
-      # on a healthy host (seen repeatedly the same afternoon) but climbs
-      # back to 13 to 94 % within minutes of the job ending. On the
-      # fragmented host it stayed at 0 with ComfyUI idle until the reboot
-      # (order 7 and up empty for every sample, 4.2 GiB free). Fragmentation
-      # builds over days, so 6 hours of delay costs nothing and rides out a
-      # long batch. Below 1 GiB free the share says little and is left out.
+      # What separates the two states on this host is whether any block of
+      # order 7 (512 KiB) or larger is ever free. Order 9 and up, and the
+      # share of free memory they hold, turned out to be too strict: on a
+      # healthy host 2.4 hours after a reboot they sat at 0 whenever
+      # ComfyUI had models loaded, idle included, and only came back when
+      # the container was recreated. Order 7 and up also drop to 0 while a
+      # job runs, but the same idle host still had 155 blocks of order 7
+      # and 42 of order 8. The fragmented host (1.8 days up) had none from
+      # order 6 up in any sample, idle or busy, and the first GPU failure
+      # on record had none from order 7 up. Hence: no order 7+ block at any
+      # point in 6 hours, with more than 1 GiB free (below that the counts
+      # reflect usage, not fragmentation). Few data points; revisit as the
+      # curve grows.
       - alert: NasMemoryFragmented
         expr: |
-          max_over_time(nas_memory_free_highorder_ratio{zone="Normal"}[6h]) < 0.02
-            and nas_memory_free_bytes{zone="Normal"} > 1024 * 1024 * 1024
+          max_over_time((sum by (nas) (nas_buddyinfo_free_blocks{zone="Normal",order=~"7|8|9|10"}))[6h:1m]) == 0
+            and on (nas) nas_memory_free_bytes{zone="Normal"} > 1024 * 1024 * 1024
         for: 10m
         labels: {severity: warning}
         annotations:
-          summary: "{{ $labels.nas }} has not kept 2 % of its free memory in 2 MiB or larger blocks at any point in 6h (Normal zone, best {{ $value | humanizePercentage }})"
+          summary: "{{ $labels.nas }} has had no free block of 512 KiB or larger in the Normal zone for 6h"
           runbook: "GPU containers may fail to start (NV_ERR_NO_MEMORY). Reboot the NAS in a quiet window before the next GPU container restart or upgrade"
 
   - name: pve
