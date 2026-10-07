@@ -122,21 +122,24 @@ groups:
       # reboot did.
       #
       # The rule reads the share of free memory in order 9 and up, not the
-      # block count. The count also falls when memory is simply in use: one
-      # hour after a reboot, with models loaded and the ARC filling, order
-      # 9+10 went from 7281 blocks to 313, yet those still held 24.9 % of
-      # what was free. After 1.8 days of uptime the share was 0.0 % with
-      # 4.2 GiB free. Below 1 GiB free the share says little, so that case
-      # is left out. The 2 % is a first cut between those two points;
-      # revisit it once the curve has a few weeks of data.
+      # block count, and asks whether it ever recovered within 6 hours. Both
+      # matter. The count falls whenever memory is in use: an hour after a
+      # reboot, with models loaded and the ARC filling, order 9+10 went from
+      # 7281 blocks to 313. The share also dips to 0 % while a GPU job runs
+      # on a healthy host (seen repeatedly the same afternoon) but climbs
+      # back to 13 to 94 % within minutes of the job ending. On the
+      # fragmented host it stayed at 0 with ComfyUI idle until the reboot
+      # (order 7 and up empty for every sample, 4.2 GiB free). Fragmentation
+      # builds over days, so 6 hours of delay costs nothing and rides out a
+      # long batch. Below 1 GiB free the share says little and is left out.
       - alert: NasMemoryFragmented
         expr: |
-          nas_memory_free_highorder_ratio{zone="Normal"} < 0.02
+          max_over_time(nas_memory_free_highorder_ratio{zone="Normal"}[6h]) < 0.02
             and nas_memory_free_bytes{zone="Normal"} > 1024 * 1024 * 1024
-        for: 1h
+        for: 10m
         labels: {severity: warning}
         annotations:
-          summary: "{{ $labels.nas }} keeps {{ $value | humanizePercentage }} of its free memory in 2 MiB or larger blocks (Normal zone, 1h)"
+          summary: "{{ $labels.nas }} has not kept 2 % of its free memory in 2 MiB or larger blocks at any point in 6h (Normal zone, best {{ $value | humanizePercentage }})"
           runbook: "GPU containers may fail to start (NV_ERR_NO_MEMORY). Reboot the NAS in a quiet window before the next GPU container restart or upgrade"
 
   - name: pve

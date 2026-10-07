@@ -277,7 +277,7 @@ def build():
     P.append(ts("記憶體碎裂（空閒記憶體中 2 MiB 以上區塊的比例）", 0, y, 16, 7,
                 [target('nas_memory_free_highorder_ratio{zone="Normal"}', "比例 {{nas}}")],
                 unit="percentunit", lines=((FRAG_WARN, "orange"),), minv=0, maxv=1,
-                desc=f"由 /proc/buddyinfo 算出 Normal zone 的空閒記憶體有多少還是 order 9 以上的連續區塊。NVIDIA 驅動要實體連續的記憶體，這個比例掉到 0 時重啟 GPU 容器會 NV_ERR_NO_MEMORY。看比例不看塊數：記憶體被用掉時塊數本來就會少，比例才分得出碎裂。低於 {FRAG_WARN:.0%} 持續 1 小時且空閒超過 1 GiB，NasMemoryFragmented 會響，處理方式是找空檔重開 NAS"))
+                desc=f"由 /proc/buddyinfo 算出 Normal zone 的空閒記憶體有多少還是 order 9 以上的連續區塊。NVIDIA 驅動要實體連續的記憶體，碎裂時重啟 GPU 容器會 NV_ERR_NO_MEMORY。出圖時這條線本來就會掉到 0，工作結束幾分鐘內會回升；碎裂的特徵是閒置也回不來。6 小時內從未回到 {FRAG_WARN:.0%} 以上且空閒超過 1 GiB，NasMemoryFragmented 會響，處理方式是找空檔重開 NAS"))
     P.append(stat("開機天數", 16, y, 8, 7, "(time() - nas_boot_time_seconds) / 86400", "{{nas}}", unit="d", decimals=1,
                   desc="碎裂隨開機時間累積，對照上圖看衰退速度"))
     y += 7

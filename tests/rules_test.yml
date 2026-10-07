@@ -99,35 +99,43 @@ tests:
           - exp_labels: {severity: critical, job: collector-host, nas: primary, pool: zpool1, state: DEGRADED}
             exp_annotations: {summary: "primary pool zpool1 is DEGRADED"}
 
-  # Fragmentation, read as the share of free memory in order 9 and up.
-  # primary drifts from a fresh boot to the fragmented state seen after 1.8
-  # days (0.0 % of 4.2 GiB) and fires after an hour. secondary is the
-  # healthy-but-busy case one hour after a reboot (24.9 % of 3.4 GiB) and
-  # must stay quiet, as must tertiary, fragmented but with under 1 GiB free.
+  # Fragmentation, read as the share of free memory in order 9 and up, at
+  # its best over 6 hours. primary goes from a fresh boot to the flat 0 of
+  # the fragmented host and fires once the 0.99 leaves the window.
+  # secondary is a healthy host that drops to 0 during every job and comes
+  # back to 20 % between them: never fires. tertiary is flat 0 with under
+  # 1 GiB free: never fires.
   - interval: 1m
     input_series:
       - series: 'nas_memory_free_highorder_ratio{job="collector-host",nas="primary",zone="Normal"}'
-        values: "0.99 0x100"
+        values: "0.99 0x720"
       - series: 'nas_memory_free_bytes{job="collector-host",nas="primary",zone="Normal"}'
-        values: "30000000000 4500000000x100"
+        values: "30000000000 4500000000x720"
       - series: 'nas_memory_free_highorder_ratio{job="collector-host",nas="secondary",zone="Normal"}'
-        values: "0.249x100"
+        values: "0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19 0.2x9 0x19"
       - series: 'nas_memory_free_bytes{job="collector-host",nas="secondary",zone="Normal"}'
-        values: "3600000000x100"
+        values: "3600000000x720"
       - series: 'nas_memory_free_highorder_ratio{job="collector-host",nas="tertiary",zone="Normal"}'
-        values: "0x100"
+        values: "0x720"
       - series: 'nas_memory_free_bytes{job="collector-host",nas="tertiary",zone="Normal"}'
-        values: "500000000x100"
+        values: "500000000x720"
     alert_rule_test:
-      - eval_time: 30m
+      - eval_time: 5h
         alertname: NasMemoryFragmented
         exp_alerts: []
-      - eval_time: 62m
+      - eval_time: 7h
         alertname: NasMemoryFragmented
         exp_alerts:
           - exp_labels: {severity: warning, job: collector-host, nas: primary, zone: Normal}
             exp_annotations:
-              summary: "primary keeps 0% of its free memory in 2 MiB or larger blocks (Normal zone, 1h)"
+              summary: "primary has not kept 2 % of its free memory in 2 MiB or larger blocks at any point in 6h (Normal zone, best 0%)"
+              runbook: "GPU containers may fail to start (NV_ERR_NO_MEMORY). Reboot the NAS in a quiet window before the next GPU container restart or upgrade"
+      - eval_time: 11h
+        alertname: NasMemoryFragmented
+        exp_alerts:
+          - exp_labels: {severity: warning, job: collector-host, nas: primary, zone: Normal}
+            exp_annotations:
+              summary: "primary has not kept 2 % of its free memory in 2 MiB or larger blocks at any point in 6h (Normal zone, best 0%)"
               runbook: "GPU containers may fail to start (NV_ERR_NO_MEMORY). Reboot the NAS in a quiet window before the next GPU container restart or upgrade"
 
   # Day 15 table row 2: NAS reboots, QDevice vote gone, still quorate.
