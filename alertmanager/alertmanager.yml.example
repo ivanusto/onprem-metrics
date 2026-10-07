@@ -58,6 +58,9 @@ inhibit_rules:
   # fw-report stopped: its numbers are old, do not alert on them (Day 22).
   - source_matchers: [alertname="FwReportStale"]
     target_matchers: [alertname=~"Fw.*|NasLogin.*"]
+  # aup-report stopped: same shape (Day 24).
+  - source_matchers: [alertname="AupReportStale"]
+    target_matchers: [alertname=~"Aup(UrgentCategoryHit|BlockedBurst|Silent)"]
   - source_matchers: [alertname="NasUnreachable"]
     target_matchers: [alertname=~"Nas(Pool|Snapshot).*"]
     equal: [nas]
