@@ -50,6 +50,10 @@ check "buddyinfo Normal order 10" '^nas_buddyinfo_free_blocks{nas="primary",node
 check "buddyinfo DMA order 10" '^nas_buddyinfo_free_blocks{nas="primary",node="0",zone="DMA",order="10"} 3$'
 if [ "$(printf '%s\n' "$out" | grep -c '^nas_buddyinfo_free_blocks{nas="primary"')" = 33 ]; then pass=$((pass+1)); echo "ok   33 buddyinfo series (3 zones x 11 orders)"; else fail=$((fail+1)); echo "FAIL buddyinfo series count"; fi
 check "boot time from btime" '^nas_boot_time_seconds{nas="primary"} 1791196320$'
+# the fake buddyinfo is the fragmented profile: nothing free from order 7 up
+check "high-order ratio of a fragmented zone is 0" '^nas_memory_free_highorder_ratio{nas="primary",zone="Normal"} 0.000000$'
+check "free bytes summed over orders" '^nas_memory_free_bytes{nas="primary",zone="Normal"} 11323944960$'
+check "high-order ratio of DMA32" '^nas_memory_free_highorder_ratio{nas="primary",zone="DMA32"} 0.003369$'
 if printf '%s\n' "$out" | grep -q 'temp_celsius'; then fail=$((fail+1)); echo "FAIL temperature still in textfile (belongs to SNMP)"; else pass=$((pass+1)); echo "ok   no temperature in textfile"; fi
 if command -v promtool >/dev/null 2>&1; then
   if promtool check metrics < "$T/nas.prom" >/dev/null 2>&1; then pass=$((pass+1)); echo "ok   promtool check metrics"; else fail=$((fail+1)); echo "FAIL promtool"; promtool check metrics < "$T/nas.prom"; fi

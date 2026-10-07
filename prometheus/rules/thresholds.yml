@@ -115,19 +115,28 @@ groups:
       # of high orders, restarting a GPU container fails with
       # NV_ERR_NO_MEMORY although MemFree is in the gigabytes. On the field
       # NAS that happened twice: once with every order from 7 up at 0, once
-      # with order 10 at 0 and order 9 at 2. Right after a reboot order 10
-      # holds thousands of blocks. Empty high orders are a precondition, not
-      # a certainty: containers have also restarted fine in that state, so
-      # this is a warning to plan a reboot, not a page. drop_caches plus
-      # compact_memory did not bring the blocks back there; a reboot did.
-      # The 16 is a first cut between the failures (0 and 2) and a fresh
-      # boot; revisit it once the curve has a few weeks of data.
+      # with order 10 at 0 and order 9 at 2. Empty high orders are a
+      # precondition, not a certainty: containers have also restarted fine
+      # in that state, so this is a warning to plan a reboot, not a page.
+      # drop_caches plus compact_memory did not bring the blocks back; a
+      # reboot did.
+      #
+      # The rule reads the share of free memory in order 9 and up, not the
+      # block count. The count also falls when memory is simply in use: one
+      # hour after a reboot, with models loaded and the ARC filling, order
+      # 9+10 went from 7281 blocks to 313, yet those still held 24.9 % of
+      # what was free. After 1.8 days of uptime the share was 0.0 % with
+      # 4.2 GiB free. Below 1 GiB free the share says little, so that case
+      # is left out. The 2 % is a first cut between those two points;
+      # revisit it once the curve has a few weeks of data.
       - alert: NasMemoryFragmented
-        expr: sum by (nas) (nas_buddyinfo_free_blocks{zone="Normal",order=~"9|10"}) < 16
+        expr: |
+          nas_memory_free_highorder_ratio{zone="Normal"} < 0.02
+            and nas_memory_free_bytes{zone="Normal"} > 1024 * 1024 * 1024
         for: 1h
         labels: {severity: warning}
         annotations:
-          summary: "{{ $labels.nas }} has {{ $value }} free order 9/10 blocks in the Normal zone for 1h"
+          summary: "{{ $labels.nas }} keeps {{ $value | humanizePercentage }} of its free memory in 2 MiB or larger blocks (Normal zone, 1h)"
           runbook: "GPU containers may fail to start (NV_ERR_NO_MEMORY). Reboot the NAS in a quiet window before the next GPU container restart or upgrade"
 
   - name: pve

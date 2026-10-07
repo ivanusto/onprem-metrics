@@ -31,6 +31,8 @@
 #   nas_zfs_snapshot_used_bytes{nas,dataset}
 #   nas_hbs_installed{nas}                    1 when HybridBackup is in qpkg.conf
 #   nas_buddyinfo_free_blocks{nas,node,zone,order}  /proc/buddyinfo, free blocks of 2^order pages
+#   nas_memory_free_bytes{nas,zone}           free memory per zone, summed from buddyinfo
+#   nas_memory_free_highorder_ratio{nas,zone} share of that free memory in blocks of order 9 (2 MiB) and up
 #   nas_boot_time_seconds{nas}                btime from /proc/stat
 #   nas_textfile_last_run_timestamp{nas}
 #
@@ -38,6 +40,9 @@
 # memory is fragmented: the NVIDIA driver wants physically contiguous
 # blocks, MemFree can be 15 GB while every high order is empty, and only a
 # reboot brings them back. free(1) and the QTS MIB do not show it.
+# The block counts alone fall whenever memory is in use, fragmented or not,
+# so the alert reads the ratio: the share of free memory still in 2 MiB or
+# larger blocks.
 set -eu
 
 # shellcheck disable=SC2016
@@ -52,10 +57,16 @@ printf "nas_up{nas=\"%s\"} %s\n" "$L" "$ok"
 
 # Memory state does not depend on zfs, so it is reported even when nas_up is 0.
 B="${NAS_BUDDYINFO:-/proc/buddyinfo}"
-[ -r "$B" ] && awk -v L="$L" "
-  \$1 == \"Node\" { n=\$2; sub(/,/, \"\", n)
-    for (i = 5; i <= NF; i++)
-      printf \"nas_buddyinfo_free_blocks{nas=\\\"%s\\\",node=\\\"%s\\\",zone=\\\"%s\\\",order=\\\"%d\\\"} %s\n\", L, n, \$4, i-5, \$i }" "$B"
+ps=$(getconf PAGESIZE 2>/dev/null || echo 4096)
+[ -r "$B" ] && awk -v L="$L" -v PS="${ps:-4096}" "
+  \$1 == \"Node\" { n=\$2; sub(/,/, \"\", n); z=\$4
+    for (i = 5; i <= NF; i++) {
+      o = i - 5; p = \$i * 2^o
+      printf \"nas_buddyinfo_free_blocks{nas=\\\"%s\\\",node=\\\"%s\\\",zone=\\\"%s\\\",order=\\\"%d\\\"} %s\n\", L, n, z, o, \$i
+      tot[z] += p; if (o >= 9) hi[z] += p } }
+  END { for (z in tot) {
+    printf \"nas_memory_free_bytes{nas=\\\"%s\\\",zone=\\\"%s\\\"} %.0f\n\", L, z, tot[z] * PS
+    printf \"nas_memory_free_highorder_ratio{nas=\\\"%s\\\",zone=\\\"%s\\\"} %.6f\n\", L, z, tot[z] ? hi[z] / tot[z] : 0 } }" "$B"
 bt=$(awk "/^btime / { print \$2 }" "${NAS_PROC_STAT:-/proc/stat}" 2>/dev/null)
 [ -n "$bt" ] && printf "nas_boot_time_seconds{nas=\"%s\"} %s\n" "$L" "$bt"
 
@@ -105,6 +116,8 @@ nas_zfs_snapshot_newest_timestamp|Creation time of the newest snapshot
 nas_zfs_snapshot_oldest_timestamp|Creation time of the oldest snapshot
 nas_hbs_installed|1 when HBS 3 is installed
 nas_buddyinfo_free_blocks|Free blocks of 2^order pages per zone, from /proc/buddyinfo
+nas_memory_free_bytes|Free memory per zone, summed from /proc/buddyinfo
+nas_memory_free_highorder_ratio|Share of free memory per zone in blocks of order 9 (2 MiB) and up
 nas_boot_time_seconds|Unix time the NAS booted
 nas_textfile_last_run_timestamp|Unix time of the last run per NAS'
 
