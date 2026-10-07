@@ -19,6 +19,7 @@ SOAK_WARN, SOAK_BUDGET = 180, 240
 MEM_WARN, MEM_CRIT = 6 * 1024 ** 3, 3 * 1024 ** 3
 POOL_WARN, POOL_CRIT = 80, 90
 DISK_TEMP_WARN = 50
+FRAG_WARN = 16  # NasMemoryFragmented: free order 9+10 blocks in the Normal zone
 DRILL_STALE_DAYS, CLOUD_DRILL_STALE_DAYS = 30, 90
 RTO_TARGET = 900
 
@@ -273,6 +274,14 @@ def build():
                 unit="bps", desc="IF-MIB 計數，只看實體埠與 bond。Day 14 量到的碟組上限約 666 MB/s，網路不是瓶頸時應低於它"))
     P.append(ts("風扇", 16, y, 8, 6, [target("qnap_fan_speed_rpm", "{{nas}} fan {{sysFanIndex}}")], unit="rotrpm"))
     y += 6
+    P.append(ts("記憶體碎裂（Normal zone 高階空閒區塊）", 0, y, 16, 7,
+                [target('sum by (nas) (nas_buddyinfo_free_blocks{zone="Normal",order=~"9|10"})', "order 9+10 {{nas}}"),
+                 target('sum by (nas) (nas_buddyinfo_free_blocks{zone="Normal",order=~"7|8"})', "order 7+8 {{nas}}")],
+                lines=((FRAG_WARN, "orange"),), minv=0,
+                desc=f"/proc/buddyinfo。NVIDIA 驅動要實體連續的區塊，高階區塊用完時重啟 GPU 容器會 NV_ERR_NO_MEMORY，即使 MemFree 還有好幾 GB。order 9+10 低於 {FRAG_WARN} 持續 1 小時 NasMemoryFragmented 會響，處理方式是找空檔重開 NAS"))
+    P.append(stat("開機天數", 16, y, 8, 7, "(time() - nas_boot_time_seconds) / 86400", "{{nas}}", unit="d", decimals=1,
+                  desc="碎裂隨開機時間累積，對照上圖看衰退速度"))
+    y += 7
 
     # ---- Row 3: PVE ------------------------------------------------------
     P.append(row("虛擬化（Proxmox VE）", y)); y += 1

@@ -1652,19 +1652,150 @@
   },
   {
    "id": 23,
+   "type": "timeseries",
+   "title": "記憶體碎裂（Normal zone 高階空閒區塊）",
+   "description": "/proc/buddyinfo。NVIDIA 驅動要實體連續的區塊，高階區塊用完時重啟 GPU 容器會 NV_ERR_NO_MEMORY，即使 MemFree 還有好幾 GB。order 9+10 低於 16 持續 1 小時 NasMemoryFragmented 會響，處理方式是找空檔重開 NAS",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 49,
+    "w": 16,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum by (nas) (nas_buddyinfo_free_blocks{zone=\"Normal\",order=~\"9|10\"})",
+     "refId": "A",
+     "legendFormat": "order 9+10 {{nas}}"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum by (nas) (nas_buddyinfo_free_blocks{zone=\"Normal\",order=~\"7|8\"})",
+     "refId": "B",
+     "legendFormat": "order 7+8 {{nas}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000,
+      "thresholdsStyle": {
+       "mode": "line+area"
+      }
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "transparent"
+       },
+       {
+        "value": 16,
+        "color": "orange"
+       }
+      ]
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 24,
+   "type": "stat",
+   "title": "開機天數",
+   "description": "碎裂隨開機時間累積，對照上圖看衰退速度",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 49,
+    "w": 8,
+    "h": 7
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "(time() - nas_boot_time_seconds) / 86400",
+     "refId": "A",
+     "legendFormat": "{{nas}}",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "unit": "d",
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value_and_name",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 25,
    "type": "row",
    "title": "虛擬化（Proxmox VE）",
    "collapsed": false,
    "gridPos": {
     "x": 0,
-    "y": 49,
+    "y": 56,
     "w": 24,
     "h": 1
    },
    "panels": []
   },
   {
-   "id": 24,
+   "id": 26,
    "type": "stat",
    "title": "法定人數",
    "description": "pvecm status 的 Quorate 旗標。0 時有 HA 資源的節點約 60 秒後自己 fence（Day 15）",
@@ -1674,7 +1805,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 50,
+    "y": 57,
     "w": 4,
     "h": 5
    },
@@ -1729,7 +1860,7 @@
    }
   },
   {
-   "id": 25,
+   "id": 27,
    "type": "stat",
    "title": "在場票數",
    "description": "Total votes。3 正常，2 是 Day 15 check.sh 的 rc=1，再掉任何一個就失去法定人數",
@@ -1739,7 +1870,7 @@
    },
    "gridPos": {
     "x": 4,
-    "y": 50,
+    "y": 57,
     "w": 4,
     "h": 5
    },
@@ -1798,7 +1929,7 @@
    }
   },
   {
-   "id": 26,
+   "id": 28,
    "type": "stat",
    "title": "QDevice 票",
    "description": "0 多半是 NAS 重開中，Virtualization Station 上的 qnetd 還沒回來，或節點上的 corosync-qdevice 停了",
@@ -1808,7 +1939,7 @@
    },
    "gridPos": {
     "x": 8,
-    "y": 50,
+    "y": 57,
     "w": 4,
     "h": 5
    },
@@ -1863,7 +1994,7 @@
    }
   },
   {
-   "id": 27,
+   "id": 29,
    "type": "stat",
    "title": "節點",
    "description": "",
@@ -1873,7 +2004,7 @@
    },
    "gridPos": {
     "x": 12,
-    "y": 50,
+    "y": 57,
     "w": 12,
     "h": 5
    },
@@ -1928,7 +2059,7 @@
    }
   },
   {
-   "id": 28,
+   "id": 30,
    "type": "table",
    "title": "HA 資源",
    "description": "每個 HA 管理的客體與節點目前的狀態。error、fence、recovery 會響",
@@ -1938,7 +2069,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 55,
+    "y": 62,
     "w": 8,
     "h": 8
    },
@@ -2069,7 +2200,7 @@
    ]
   },
   {
-   "id": 29,
+   "id": 31,
    "type": "table",
    "title": "儲存",
    "description": "各節點看到的資料存放區。NFS 在 NAS 重開時會變不可用，約 8 分鐘（Day 15 演練 1）",
@@ -2079,7 +2210,7 @@
    },
    "gridPos": {
     "x": 8,
-    "y": 55,
+    "y": 62,
     "w": 8,
     "h": 8
    },
@@ -2183,7 +2314,7 @@
    ]
   },
   {
-   "id": 30,
+   "id": 32,
    "type": "timeseries",
    "title": "執行中的 VM 數",
    "description": "pve-exporter 兩個節點都回整座叢集，先去掉 instance 再 count，否則每台客體算兩次",
@@ -2193,7 +2324,7 @@
    },
    "gridPos": {
     "x": 16,
-    "y": 55,
+    "y": 62,
     "w": 8,
     "h": 8
    },
@@ -2245,7 +2376,7 @@
    }
   },
   {
-   "id": 31,
+   "id": 33,
    "type": "timeseries",
    "title": "節點 CPU",
    "description": "",
@@ -2255,7 +2386,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 63,
+    "y": 70,
     "w": 8,
     "h": 6
    },
@@ -2300,7 +2431,7 @@
    }
   },
   {
-   "id": 32,
+   "id": 34,
    "type": "timeseries",
    "title": "節點記憶體",
    "description": "",
@@ -2310,7 +2441,7 @@
    },
    "gridPos": {
     "x": 8,
-    "y": 63,
+    "y": 70,
     "w": 8,
     "h": 6
    },
@@ -2355,7 +2486,7 @@
    }
   },
   {
-   "id": 33,
+   "id": 35,
    "type": "timeseries",
    "title": "客體磁碟 I/O",
    "description": "",
@@ -2365,7 +2496,7 @@
    },
    "gridPos": {
     "x": 16,
-    "y": 63,
+    "y": 70,
     "w": 8,
     "h": 6
    },
@@ -2417,20 +2548,20 @@
    }
   },
   {
-   "id": 34,
+   "id": 36,
    "type": "row",
    "title": "還原演練（Day 16 至 18）",
    "collapsed": false,
    "gridPos": {
     "x": 0,
-    "y": 69,
+    "y": 76,
     "w": 24,
     "h": 1
    },
    "panels": []
   },
   {
-   "id": 35,
+   "id": 37,
    "type": "bargauge",
    "title": "距上次成功（天）",
    "description": "每個演練標籤一條。pve 與 nas 的政策是每月，30 天轉橘。cloud 是每季，90 天轉紅。這一排全綠才叫備份存在",
@@ -2440,7 +2571,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 70,
+    "y": 77,
     "w": 10,
     "h": 10
    },
@@ -2505,7 +2636,7 @@
    }
   },
   {
-   "id": 36,
+   "id": 38,
    "type": "table",
    "title": "最近一次演練",
    "description": "結果、RTO、RPO、速率。RTO 目標 900 s 只對 pve 演練（Day 16 量到 569 s），nas 與 cloud 的標籤含上傳與整個資料夾回復，量級不同",
@@ -2515,7 +2646,7 @@
    },
    "gridPos": {
     "x": 10,
-    "y": 70,
+    "y": 77,
     "w": 14,
     "h": 10
    },
@@ -2759,7 +2890,7 @@
    ]
   },
   {
-   "id": 37,
+   "id": 39,
    "type": "timeseries",
    "title": "RTO 走勢",
    "description": "每次演練寫入 drills.jsonl 後 15 分鐘內更新。走勢往上就是還原在變慢",
@@ -2769,7 +2900,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 80,
+    "y": 87,
     "w": 24,
     "h": 7
    },
@@ -2829,20 +2960,20 @@
    }
   },
   {
-   "id": 38,
+   "id": 40,
    "type": "row",
    "title": "管線",
    "collapsed": false,
    "gridPos": {
     "x": 0,
-    "y": 87,
+    "y": 94,
     "w": 24,
     "h": 1
    },
    "panels": []
   },
   {
-   "id": 39,
+   "id": 41,
    "type": "table",
    "title": "抓取目標",
    "description": "每個抓取目標最後一次抓取是否成功。DOWN 五分鐘 TargetDown 會響",
@@ -2852,7 +2983,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 88,
+    "y": 95,
     "w": 12,
     "h": 8
    },
@@ -2959,7 +3090,7 @@
    ]
   },
   {
-   "id": 40,
+   "id": 42,
    "type": "bargauge",
    "title": "textfile 距上次執行",
    "description": "Day 19 第四節。舊的 .prom 檔會讓數字看起來正常，這一格變橘就是靜默失效。drills 每 15 分鐘一次，其他每分鐘或更快",
@@ -2969,7 +3100,7 @@
    },
    "gridPos": {
     "x": 12,
-    "y": 88,
+    "y": 95,
     "w": 12,
     "h": 8
    },

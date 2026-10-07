@@ -27,6 +27,13 @@ cat > "$T/bin/getcfg" <<'EOT'
 [ "$1 $2" = "HybridBackup Version" ] && echo 26.4.4.788
 EOT
 chmod +x "$T"/bin/*
+cat > "$T/buddyinfo" <<'EOT'
+Node 0, zone      DMA      0      0      0      0      0      0      0      0      1      1      3
+Node 0, zone    DMA32    313    255    172    113     55   2180    611    207     50      1      0
+Node 0, zone   Normal 425257  74031  93543  77921  12561  30507    259      0      0      0      0
+EOT
+printf 'cpu  1 2 3 4\nbtime 1791196320\nprocesses 5\n' > "$T/stat"
+export NAS_BUDDYINFO="$T/buddyinfo" NAS_PROC_STAT="$T/stat"
 out=$(PATH="$T/bin:$PATH" NAS_TEXTFILE_LOCAL=1 "$HERE/textfile/nas-textfile.sh" primary)
 printf '%s\n' "$out" > "$T/nas.prom"
 pass=0; fail=0
@@ -38,6 +45,11 @@ check "snapshot count excludes :init:" '^nas_zfs_snapshots{nas="primary",dataset
 if printf '%s\n' "$out" | grep -q 'nas_zfs_snapshots{nas="primary",dataset="zpool1/zfs264"}'; then fail=$((fail+1)); echo "FAIL zfs264 count present"; else pass=$((pass+1)); echo "ok   zfs264 has no snapshot_count"; fi
 check "snapshot used bytes summed" '^nas_zfs_snapshot_used_bytes{nas="primary",dataset="zpool1/zfs263"} 125802467$'
 check "hbs installed" '^nas_hbs_installed{nas="primary"} 1$'
+check "buddyinfo Normal order 5" '^nas_buddyinfo_free_blocks{nas="primary",node="0",zone="Normal",order="5"} 30507$'
+check "buddyinfo Normal order 10" '^nas_buddyinfo_free_blocks{nas="primary",node="0",zone="Normal",order="10"} 0$'
+check "buddyinfo DMA order 10" '^nas_buddyinfo_free_blocks{nas="primary",node="0",zone="DMA",order="10"} 3$'
+if [ "$(printf '%s\n' "$out" | grep -c '^nas_buddyinfo_free_blocks{nas="primary"')" = 33 ]; then pass=$((pass+1)); echo "ok   33 buddyinfo series (3 zones x 11 orders)"; else fail=$((fail+1)); echo "FAIL buddyinfo series count"; fi
+check "boot time from btime" '^nas_boot_time_seconds{nas="primary"} 1791196320$'
 if printf '%s\n' "$out" | grep -q 'temp_celsius'; then fail=$((fail+1)); echo "FAIL temperature still in textfile (belongs to SNMP)"; else pass=$((pass+1)); echo "ok   no temperature in textfile"; fi
 if command -v promtool >/dev/null 2>&1; then
   if promtool check metrics < "$T/nas.prom" >/dev/null 2>&1; then pass=$((pass+1)); echo "ok   promtool check metrics"; else fail=$((fail+1)); echo "FAIL promtool"; promtool check metrics < "$T/nas.prom"; fi

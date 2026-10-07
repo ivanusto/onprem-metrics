@@ -99,6 +99,33 @@ tests:
           - exp_labels: {severity: critical, job: collector-host, nas: primary, pool: zpool1, state: DEGRADED}
             exp_annotations: {summary: "primary pool zpool1 is DEGRADED"}
 
+  # Fragmentation: order 10 empties first, then order 9 drops to the 2 blocks
+  # seen at the second GPU init failure. Fresh-boot counts never fire, and
+  # the DMA32 zone running dry does not count.
+  - interval: 1m
+    input_series:
+      - series: 'nas_buddyinfo_free_blocks{job="collector-host",nas="primary",node="0",zone="Normal",order="10"}'
+        values: "6507 0x100"
+      - series: 'nas_buddyinfo_free_blocks{job="collector-host",nas="primary",node="0",zone="Normal",order="9"}'
+        values: "40 2x100"
+      - series: 'nas_buddyinfo_free_blocks{job="collector-host",nas="primary",node="0",zone="DMA32",order="10"}'
+        values: "0x100"
+      - series: 'nas_buddyinfo_free_blocks{job="collector-host",nas="secondary",node="0",zone="Normal",order="10"}'
+        values: "14261x100"
+      - series: 'nas_buddyinfo_free_blocks{job="collector-host",nas="secondary",node="0",zone="DMA32",order="9"}'
+        values: "0x100"
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: NasMemoryFragmented
+        exp_alerts: []
+      - eval_time: 62m
+        alertname: NasMemoryFragmented
+        exp_alerts:
+          - exp_labels: {severity: warning, nas: primary}
+            exp_annotations:
+              summary: "primary has 2 free order 9/10 blocks in the Normal zone for 1h"
+              runbook: "GPU containers may fail to start (NV_ERR_NO_MEMORY). Reboot the NAS in a quiet window before the next GPU container restart or upgrade"
+
   # Day 15 table row 2: NAS reboots, QDevice vote gone, still quorate.
   - interval: 1m
     input_series:

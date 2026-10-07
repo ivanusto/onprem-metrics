@@ -30,7 +30,14 @@
 #   nas_zfs_snapshot_oldest_timestamp{nas,dataset}
 #   nas_zfs_snapshot_used_bytes{nas,dataset}
 #   nas_hbs_installed{nas}                    1 when HybridBackup is in qpkg.conf
+#   nas_buddyinfo_free_blocks{nas,node,zone,order}  /proc/buddyinfo, free blocks of 2^order pages
+#   nas_boot_time_seconds{nas}                btime from /proc/stat
 #   nas_textfile_last_run_timestamp{nas}
+#
+# buddyinfo is here because a GPU on the NAS stops initialising once host
+# memory is fragmented: the NVIDIA driver wants physically contiguous
+# blocks, MemFree can be 15 GB while every high order is empty, and only a
+# reboot brings them back. free(1) and the QTS MIB do not show it.
 set -eu
 
 # shellcheck disable=SC2016
@@ -42,6 +49,16 @@ esc() { printf "%s" "$1" | sed "s/\\\\/\\\\\\\\/g; s/\"/\\\\\"/g"; }
 ok=0
 if command -v zpool >/dev/null 2>&1 && zpool list -Hp -o name >/dev/null 2>&1; then ok=1; fi
 printf "nas_up{nas=\"%s\"} %s\n" "$L" "$ok"
+
+# Memory state does not depend on zfs, so it is reported even when nas_up is 0.
+B="${NAS_BUDDYINFO:-/proc/buddyinfo}"
+[ -r "$B" ] && awk -v L="$L" "
+  \$1 == \"Node\" { n=\$2; sub(/,/, \"\", n)
+    for (i = 5; i <= NF; i++)
+      printf \"nas_buddyinfo_free_blocks{nas=\\\"%s\\\",node=\\\"%s\\\",zone=\\\"%s\\\",order=\\\"%d\\\"} %s\n\", L, n, \$4, i-5, \$i }" "$B"
+bt=$(awk "/^btime / { print \$2 }" "${NAS_PROC_STAT:-/proc/stat}" 2>/dev/null)
+[ -n "$bt" ] && printf "nas_boot_time_seconds{nas=\"%s\"} %s\n" "$L" "$bt"
+
 [ "$ok" = 1 ] || exit 0
 
 zpool list -Hp -o name,size,alloc,cap,health 2>/dev/null | while IFS="	" read -r name size alloc cap health; do
@@ -87,6 +104,8 @@ nas_zfs_snapshot_used_bytes|Space held by snapshots per dataset
 nas_zfs_snapshot_newest_timestamp|Creation time of the newest snapshot
 nas_zfs_snapshot_oldest_timestamp|Creation time of the oldest snapshot
 nas_hbs_installed|1 when HBS 3 is installed
+nas_buddyinfo_free_blocks|Free blocks of 2^order pages per zone, from /proc/buddyinfo
+nas_boot_time_seconds|Unix time the NAS booted
 nas_textfile_last_run_timestamp|Unix time of the last run per NAS'
 
 group() { # stdin: samples in any order -> stdout: HELP/TYPE + contiguous family
