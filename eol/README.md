@@ -25,7 +25,7 @@
 | FortiOS 7.6 | [endoflife.date/fortios](https://endoflife.date/fortios)，[Fortinet CSB-260330-1](https://community.fortinet.com/fortigate-3/technical-tip-fortios-end-of-support-change-for-fortios-v7-4-and-v7-6-224876) | EOES 2028-07-25，EOS 2030-01-25 | 2026 年 3 月各延一年 |
 | FortiGate 60F 硬體 | Fortinet 支援入口的 Product Life Cycle | ? | 截至 2026 年 10 月尚未公告 End of Order。Fortinet 至少提前 90 天公告，硬體支援到 End of Order 後 60 個月（第三方整理，待查官方頁面） |
 | FortiGuard 授權 | `GET /api/v2/monitor/license/status` | 裝置即時 | 2026-10-09 讀到 20 項 FortiGuard 服務在 2025-09-20 同日到期（含 Web Filtering 與韌體更新），FortiCare 沒有支援合約資料 |
-| FortiAP 221E | 第三方追蹤站轉引 Fortinet 的生命週期紀錄，例如 [Uniqcli](https://getuniqcli.com/tools/eol/fortinet/fortiap-221e) | End of Order 2025-12-30，End of Support 2030-12-30 | 最後一次延長服務 2029-12-30。官方入口要登入，待確認 |
+| FortiAP 221E | 第三方追蹤站轉引 Fortinet 的生命週期紀錄，例如 [Uniqcli](https://getuniqcli.com/tools/eol/fortinet/fortiap-221e) | End of Order 2025-12-30，End of Support 2030-12-30 | 已擁有的設備停售只影響加購，所以清單看 End of Support；End of Order 寫在 note。最後一次延長服務 2029-12-30。官方入口要登入，待確認 |
 | DGX OS 7 | [NVIDIA DGX OS 7 Release Notes](https://docs.nvidia.com/dgx/dgx-os-7-user-guide/release_notes.html) | ? | 沒有公布終止日。DGX OS 8 已存在，7.6.0 是升到 8 的必經版本 |
 | Ubuntu 24.04 | [endoflife.date/ubuntu](https://endoflife.date/ubuntu) | 2029-05-31 | DGX OS 7 的底層，當作下限；也是收集端 VM 的系統 |
 | Proxmox VE 9 | [endoflife.date/proxmox-ve](https://endoflife.date/proxmox-ve) | 推算 2028-08-09 | Proxmox 說至少與對應的 Debian 一樣長，PVE 8 在 2026-08-31 結束。endoflife.date 對 9 還沒有日期，`eol_ref` 指向它，一公布就會出現不一致 |
