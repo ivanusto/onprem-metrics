@@ -356,26 +356,37 @@ def build():
                   thresholds=steps((None, "green"), (1, "orange")),
                   desc="eol/assets.tsv 裡日期是 ? 的列。廠商沒公布或還沒查。每一列都是一個 AssetEolUnknown",
                   mode="value"))
-    P.append(stat("已過期", 4, y, 4, 4, "count(asset_eol_timestamp_seconds <= time()) or vector(0)", "",
+    P.append(stat("已過期", 4, y, 4, 4, 'count(asset_eol_timestamp_seconds{kind!="licence"} <= time()) or vector(0)', "",
                   thresholds=steps((None, "green"), (1, "red")),
-                  desc="支援已結束或授權已到期而清單還掛著的。AssetEolPassed 會一直響到列被改掉", mode="value"))
-    P.append(stat("90 天內", 8, y, 4, 4, f"count(0 < (asset_eol_timestamp_seconds - time()) / 86400 <= {EOL_WARN_DAYS}) or vector(0)", "",
+                  desc="支援已結束而清單還掛著的。AssetEolPassed 會一直響到列被改掉。授權另計", mode="value"))
+    P.append(stat("過期授權", 8, y, 4, 4, 'count(asset_eol_timestamp_seconds{kind="licence"} <= time()) or vector(0)', "",
+                  thresholds=steps((None, "green"), (1, "red")),
+                  desc="FortiGate 自己回報已到期的授權項目數。同一張合約一起到期，所以告警是每台一條 AssetLicenceExpired", mode="value"))
+    P.append(stat("90 天內", 12, y, 4, 4, f"count(0 < (asset_eol_timestamp_seconds - time()) / 86400 <= {EOL_WARN_DAYS}) or vector(0)", "",
                   thresholds=steps((None, "green"), (1, "orange")),
-                  desc=f"{EOL_WARN_DAYS} 天是一個採購週期：報價、變更單、維護窗", mode="value"))
-    P.append(stat("endoflife.date 不一致", 12, y, 4, 4, "count(asset_eol_source_mismatch == 1) or vector(0)", "",
+                  desc=f"{EOL_WARN_DAYS} 天是一個採購週期：報價、變更單、維護窗。含授權", mode="value"))
+    P.append(stat("endoflife.date 不一致", 16, y, 4, 4, "count(asset_eol_source_mismatch == 1) or vector(0)", "",
                   thresholds=steps((None, "green"), (1, "orange")),
                   desc="TSV 的日期與 endoflife.date 不同。廠商改了日期，或 TSV 打錯", mode="value"))
-    P.append(stat("清單更新於", 16, y, 8, 4, "(time() - eol_textfile_last_run_timestamp) / 86400", "",
+    P.append(stat("清單更新於", 20, y, 4, 4, "(time() - eol_textfile_last_run_timestamp) / 86400", "",
                   unit="d", decimals=1, thresholds=steps((None, "green"), (2, "orange")),
                   desc="eol-textfile.py 每天一次。兩天沒跑 EolTextfileStale", mode="value"))
     y += 4
-    P.append(table("距生命週期終點（天）", 0, y, 24, 11,
-                   [target("(asset_eol_timestamp_seconds - time()) / 86400", instant=True, fmt="table")],
+    P.append(table("距生命週期終點（天）", 0, y, 16, 11,
+                   [target('(asset_eol_timestamp_seconds{kind!="licence"} - time()) / 86400', instant=True, fmt="table")],
                    desc=f"每一列一個（資產、元件、里程碑）。負數是已經過了。{EOL_WARN_DAYS} 天轉橘，{EOL_CRIT_DAYS} 天轉紅。basis 是 estimate 的列，日期是推算的（例如以底層 Debian 的期限當 Proxmox VE 的期限），不是廠商公告",
                    rename={"asset": "資產", "component": "元件", "kind": "種類", "version": "版本", "milestone": "里程碑", "basis": "依據", "Value": "剩餘天數"},
                    order=("資產", "元件", "種類", "版本", "里程碑", "依據", "剩餘天數"), sort="剩餘天數",
                    overrides=[col("資產", width=110), col("種類", width=80), col("版本", width=80), col("依據", width=80),
                               cell("剩餘天數", steps((None, "red"), (EOL_CRIT_DAYS, "orange"), (EOL_WARN_DAYS, "green")), "d", width=110)]))
+    P.append(table("授權到期（天）", 16, y, 8, 11,
+                   [target('(asset_eol_timestamp_seconds{kind="licence"} - time()) / 86400', instant=True, fmt="table")],
+                   desc="eol-textfile.py --fortigate 從 /api/v2/monitor/license/status 讀的每一項。負數是已到期",
+                   hide=("kind", "version", "milestone", "basis"),
+                   rename={"asset": "資產", "component": "授權", "Value": "剩餘天數"},
+                   order=("資產", "授權", "剩餘天數"), sort="剩餘天數",
+                   overrides=[col("資產", width=90),
+                              cell("剩餘天數", steps((None, "red"), (EOL_CRIT_DAYS, "orange"), (EOL_WARN_DAYS, "green")), "d", width=100)]))
     y += 11
 
     # ---- Row 6: the pipeline itself -------------------------------------

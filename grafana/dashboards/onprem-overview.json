@@ -3015,7 +3015,7 @@
    "id": 42,
    "type": "stat",
    "title": "已過期",
-   "description": "支援已結束或授權已到期而清單還掛著的。AssetEolPassed 會一直響到列被改掉",
+   "description": "支援已結束而清單還掛著的。AssetEolPassed 會一直響到列被改掉。授權另計",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -3032,7 +3032,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "count(asset_eol_timestamp_seconds <= time()) or vector(0)",
+     "expr": "count(asset_eol_timestamp_seconds{kind!=\"licence\"} <= time()) or vector(0)",
      "refId": "A",
      "legendFormat": "__auto",
      "instant": true,
@@ -3078,14 +3078,78 @@
   {
    "id": 43,
    "type": "stat",
-   "title": "90 天內",
-   "description": "90 天是一個採購週期：報價、變更單、維護窗",
+   "title": "過期授權",
+   "description": "FortiGate 自己回報已到期的授權項目數。同一張合約一起到期，所以告警是每台一條 AssetLicenceExpired",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
    },
    "gridPos": {
     "x": 8,
+    "y": 95,
+    "w": 4,
+    "h": 4
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count(asset_eol_timestamp_seconds{kind=\"licence\"} <= time()) or vector(0)",
+     "refId": "A",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "value": null,
+        "color": "green"
+       },
+       {
+        "value": 1,
+        "color": "red"
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "textMode": "value",
+    "colorMode": "background",
+    "graphMode": "none",
+    "justifyMode": "center",
+    "orientation": "auto"
+   }
+  },
+  {
+   "id": 44,
+   "type": "stat",
+   "title": "90 天內",
+   "description": "90 天是一個採購週期：報價、變更單、維護窗。含授權",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 12,
     "y": 95,
     "w": 4,
     "h": 4
@@ -3140,7 +3204,7 @@
    }
   },
   {
-   "id": 44,
+   "id": 45,
    "type": "stat",
    "title": "endoflife.date 不一致",
    "description": "TSV 的日期與 endoflife.date 不同。廠商改了日期，或 TSV 打錯",
@@ -3149,7 +3213,7 @@
     "uid": "prometheus"
    },
    "gridPos": {
-    "x": 12,
+    "x": 16,
     "y": 95,
     "w": 4,
     "h": 4
@@ -3204,7 +3268,7 @@
    }
   },
   {
-   "id": 45,
+   "id": 46,
    "type": "stat",
    "title": "清單更新於",
    "description": "eol-textfile.py 每天一次。兩天沒跑 EolTextfileStale",
@@ -3213,9 +3277,9 @@
     "uid": "prometheus"
    },
    "gridPos": {
-    "x": 16,
+    "x": 20,
     "y": 95,
-    "w": 8,
+    "w": 4,
     "h": 4
    },
    "targets": [
@@ -3270,7 +3334,7 @@
    }
   },
   {
-   "id": 46,
+   "id": 47,
    "type": "table",
    "title": "距生命週期終點（天）",
    "description": "每一列一個（資產、元件、里程碑）。負數是已經過了。90 天轉橘，30 天轉紅。basis 是 estimate 的列，日期是推算的（例如以底層 Debian 的期限當 Proxmox VE 的期限），不是廠商公告",
@@ -3281,7 +3345,7 @@
    "gridPos": {
     "x": 0,
     "y": 99,
-    "w": 24,
+    "w": 16,
     "h": 11
    },
    "targets": [
@@ -3290,7 +3354,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "(asset_eol_timestamp_seconds - time()) / 86400",
+     "expr": "(asset_eol_timestamp_seconds{kind!=\"licence\"} - time()) / 86400",
      "refId": "A",
      "legendFormat": "__auto",
      "instant": true,
@@ -3456,7 +3520,153 @@
    ]
   },
   {
-   "id": 47,
+   "id": 48,
+   "type": "table",
+   "title": "授權到期（天）",
+   "description": "eol-textfile.py --fortigate 從 /api/v2/monitor/license/status 讀的每一項。負數是已到期",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 99,
+    "w": 8,
+    "h": 11
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "(asset_eol_timestamp_seconds{kind=\"licence\"} - time()) / 86400",
+     "refId": "A",
+     "legendFormat": "__auto",
+     "instant": true,
+     "range": false,
+     "format": "table"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "資產"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 90
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "剩餘天數"
+      },
+      "properties": [
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background"
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "thresholds"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "value": null,
+           "color": "red"
+          },
+          {
+           "value": 30,
+           "color": "orange"
+          },
+          {
+           "value": 90,
+           "color": "green"
+          }
+         ]
+        }
+       },
+       {
+        "id": "unit",
+        "value": "d"
+       },
+       {
+        "id": "custom.width",
+        "value": 100
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false
+    },
+    "sortBy": [
+     {
+      "displayName": "剩餘天數",
+      "desc": false
+     }
+    ]
+   },
+   "transformations": [
+    {
+     "id": "merge",
+     "options": {}
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "__name__": true,
+       "job": true,
+       "instance": true,
+       "site": true,
+       "role": true,
+       "hw": true,
+       "kind": true,
+       "version": true,
+       "milestone": true,
+       "basis": true
+      },
+      "renameByName": {
+       "asset": "資產",
+       "component": "授權",
+       "Value": "剩餘天數"
+      },
+      "indexByName": {
+       "資產": 0,
+       "授權": 1,
+       "剩餘天數": 2
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": 49,
    "type": "row",
    "title": "管線",
    "collapsed": false,
@@ -3469,7 +3679,7 @@
    "panels": []
   },
   {
-   "id": 48,
+   "id": 50,
    "type": "table",
    "title": "抓取目標",
    "description": "每個抓取目標最後一次抓取是否成功。DOWN 五分鐘 TargetDown 會響",
@@ -3586,7 +3796,7 @@
    ]
   },
   {
-   "id": 49,
+   "id": 51,
    "type": "bargauge",
    "title": "textfile 距上次執行",
    "description": "Day 19 第四節。舊的 .prom 檔會讓數字看起來正常，這一格變橘就是靜默失效。drills 每 15 分鐘一次，其他每分鐘或更快",

@@ -14,11 +14,11 @@ groups:
       # 90 days is one procurement cycle in this lab: a quote, a change
       # record (Day 26), a maintenance window, and slack for the vendor.
       - alert: AssetEolWithin90Days
-        expr: 0 < (asset_eol_timestamp_seconds - time()) / 86400 <= 90
+        expr: 0 < (asset_eol_timestamp_seconds{kind!="licence"} - time()) / 86400 <= 90
         labels: {severity: warning}
         annotations: {summary: "{{ $labels.asset }} {{ $labels.component }} {{ $labels.version }}: {{ $labels.milestone }} in {{ $value | printf \"%.0f\" }} days ({{ $labels.basis }})"}
       - alert: AssetEolWithin30Days
-        expr: 0 < (asset_eol_timestamp_seconds - time()) / 86400 <= 30
+        expr: 0 < (asset_eol_timestamp_seconds{kind!="licence"} - time()) / 86400 <= 30
         labels: {severity: critical}
         annotations: {summary: "{{ $labels.asset }} {{ $labels.component }} {{ $labels.version }}: {{ $labels.milestone }} in {{ $value | printf \"%.0f\" }} days ({{ $labels.basis }})"}
       # Already past. A licence that expired (Day 24's Web Filtering) or a
@@ -26,9 +26,20 @@ groups:
       # it pages until the row is fixed, the asset upgraded, or the risk
       # accepted in writing and the row changed to say so.
       - alert: AssetEolPassed
-        expr: (time() - asset_eol_timestamp_seconds) / 86400 >= 0
+        expr: (time() - asset_eol_timestamp_seconds{kind!="licence"}) / 86400 >= 0
         labels: {severity: critical}
         annotations: {summary: "{{ $labels.asset }} {{ $labels.component }} {{ $labels.version }}: {{ $labels.milestone }} was {{ $value | printf \"%.0f\" }} days ago ({{ $labels.basis }})"}
+      # Licences come from one contract and lapse together: the 60F reported
+      # 20 FortiGuard services expiring on the same day. One alert per device
+      # with the count, not one per service; the dashboard lists them all.
+      - alert: AssetLicenceExpired
+        expr: count by (asset) (asset_eol_timestamp_seconds{kind="licence"} <= time()) > 0
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.asset }}: {{ $value }} licences expired, see asset_licence_status"}
+      - alert: AssetLicenceExpiring
+        expr: count by (asset) (0 < asset_eol_timestamp_seconds{kind="licence"} - time() <= 90 * 86400) > 0
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.asset }}: {{ $value }} licences expire within 90 days"}
       - alert: AssetEolUnknown
         expr: asset_eol_unknown == 1
         labels: {severity: info}

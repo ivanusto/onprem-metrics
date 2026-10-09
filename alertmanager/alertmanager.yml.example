@@ -64,7 +64,7 @@ inhibit_rules:
   # eol-textfile stopped: the dates it last wrote are still true, but a
   # new "within 90 days" would come from stale data (Day 25).
   - source_matchers: [alertname="EolTextfileStale"]
-    target_matchers: [alertname=~"AssetEol.*"]
+    target_matchers: [alertname=~"Asset(Eol|Licence).*"]
   - source_matchers: [alertname="NasUnreachable"]
     target_matchers: [alertname=~"Nas(Pool|Snapshot).*"]
     equal: [nas]
