@@ -1,11 +1,50 @@
 {
- "schema_version": "1.2.0",
- "generated_at": "2026-10-08T00:00:00Z",
+ "schema_version": "1.2.1",
+ "generated_at": "2026-10-09T00:09:26+00:00",
+ "last_modified": "2026-05-01T09:58:42+00:00",
  "result": {
   "name": "fortios",
+  "aliases": [],
   "label": "FortiOS",
   "category": "os",
+  "tags": [
+   "fortinet",
+   "os"
+  ],
+  "versionCommand": "get system status",
+  "identifiers": [
+   {
+    "type": "cpe",
+    "id": "cpe:2.3:o:fortinet:fortios"
+   }
+  ],
+  "labels": {
+   "eoas": "End of Engineering Support",
+   "discontinued": null,
+   "eol": "End of Support",
+   "eoes": null
+  },
+  "links": {
+   "icon": "https://cdn.jsdelivr.net/npm/simple-icons/icons/fortinet.svg",
+   "html": "https://endoflife.date/fortios",
+   "releasePolicy": null
+  },
   "releases": [
+   {
+    "name": "8.0",
+    "codename": null,
+    "label": "8.0",
+    "releaseDate": "2026-04-21",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": false,
+    "eoasFrom": "2029-04-21",
+    "isEol": false,
+    "eolFrom": "2030-10-21",
+    "isMaintained": true,
+    "latest": null,
+    "custom": null
+   },
    {
     "name": "7.6",
     "codename": null,
@@ -17,14 +56,8 @@
     "eoasFrom": "2028-07-25",
     "isEol": false,
     "eolFrom": "2030-01-25",
-    "isEoes": null,
-    "eoesFrom": null,
     "isMaintained": true,
-    "latest": {
-     "name": "7.6.x",
-     "date": "2024-07-25",
-     "link": null
-    },
+    "latest": null,
     "custom": null
    },
    {
@@ -38,14 +71,8 @@
     "eoasFrom": "2027-05-11",
     "isEol": false,
     "eolFrom": "2028-11-11",
-    "isEoes": null,
-    "eoesFrom": null,
     "isMaintained": true,
-    "latest": {
-     "name": "7.4.x",
-     "date": "2023-05-11",
-     "link": null
-    },
+    "latest": null,
     "custom": null
    },
    {
@@ -55,18 +82,72 @@
     "releaseDate": "2022-03-31",
     "isLts": false,
     "ltsFrom": null,
-    "isEoas": false,
+    "isEoas": true,
     "eoasFrom": "2025-03-31",
-    "isEol": false,
+    "isEol": true,
     "eolFrom": "2026-09-30",
-    "isEoes": null,
-    "eoesFrom": null,
-    "isMaintained": true,
-    "latest": {
-     "name": "7.2.x",
-     "date": "2022-03-31",
-     "link": null
-    },
+    "isMaintained": false,
+    "latest": null,
+    "custom": null
+   },
+   {
+    "name": "7.0",
+    "codename": null,
+    "label": "7.0",
+    "releaseDate": "2021-03-30",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": true,
+    "eoasFrom": "2024-03-30",
+    "isEol": true,
+    "eolFrom": "2025-09-30",
+    "isMaintained": false,
+    "latest": null,
+    "custom": null
+   },
+   {
+    "name": "6.4",
+    "codename": null,
+    "label": "6.4",
+    "releaseDate": "2020-03-31",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": true,
+    "eoasFrom": "2023-03-31",
+    "isEol": true,
+    "eolFrom": "2024-09-30",
+    "isMaintained": false,
+    "latest": null,
+    "custom": null
+   },
+   {
+    "name": "6.2",
+    "codename": null,
+    "label": "6.2",
+    "releaseDate": "2019-03-28",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": true,
+    "eoasFrom": "2022-03-28",
+    "isEol": true,
+    "eolFrom": "2023-09-28",
+    "isMaintained": false,
+    "latest": null,
+    "custom": null
+   },
+   {
+    "name": "6.0",
+    "codename": null,
+    "label": "6.0",
+    "releaseDate": "2018-03-29",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": true,
+    "eoasFrom": "2021-03-29",
+    "isEol": true,
+    "eolFrom": "2022-09-29",
+    "isMaintained": false,
+    "latest": null,
     "custom": null
    }
   ]

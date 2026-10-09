@@ -1,10 +1,41 @@
 {
- "schema_version": "1.2.0",
- "generated_at": "2026-10-08T00:00:00Z",
+ "schema_version": "1.2.1",
+ "generated_at": "2026-10-09T00:09:26+00:00",
+ "last_modified": "2026-09-26T00:24:20+00:00",
  "result": {
   "name": "proxmox-ve",
+  "aliases": [
+   "pve",
+   "proxmoxve"
+  ],
   "label": "Proxmox VE",
   "category": "os",
+  "tags": [
+   "os",
+   "proxmox"
+  ],
+  "versionCommand": "pveversion –v",
+  "identifiers": [
+   {
+    "type": "cpe",
+    "id": "cpe:/a:proxmox:virtual_environment"
+   },
+   {
+    "type": "cpe",
+    "id": "cpe:2.3:a:proxmox:virtual_environment"
+   }
+  ],
+  "labels": {
+   "eoas": null,
+   "discontinued": null,
+   "eol": "Security Support",
+   "eoes": null
+  },
+  "links": {
+   "icon": "https://cdn.jsdelivr.net/npm/simple-icons/icons/proxmox.svg",
+   "html": "https://endoflife.date/proxmox-ve",
+   "releasePolicy": "https://pve.proxmox.com/wiki/FAQ"
+  },
   "releases": [
    {
     "name": "9",
@@ -13,17 +44,13 @@
     "releaseDate": "2025-08-05",
     "isLts": false,
     "ltsFrom": null,
-    "isEoas": false,
-    "eoasFrom": null,
     "isEol": false,
     "eolFrom": null,
-    "isEoes": null,
-    "eoesFrom": null,
     "isMaintained": true,
     "latest": {
-     "name": "9.x",
-     "date": "2025-08-05",
-     "link": null
+     "name": "9.2",
+     "date": "2026-05-21",
+     "link": "https://pve.proxmox.com/wiki/Roadmap#Proxmox_VE_9.2"
     },
     "custom": null
    },
@@ -34,17 +61,132 @@
     "releaseDate": "2023-06-22",
     "isLts": false,
     "ltsFrom": null,
-    "isEoas": false,
-    "eoasFrom": "2026-08-31",
-    "isEol": false,
+    "isEol": true,
     "eolFrom": "2026-08-31",
-    "isEoes": null,
-    "eoesFrom": null,
     "isMaintained": false,
     "latest": {
-     "name": "8.x",
-     "date": "2023-06-22",
-     "link": null
+     "name": "8.4",
+     "date": "2025-04-09",
+     "link": "https://pve.proxmox.com/wiki/Roadmap#Proxmox_VE_8.4"
+    },
+    "custom": null
+   },
+   {
+    "name": "7",
+    "codename": null,
+    "label": "7",
+    "releaseDate": "2021-07-06",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEol": true,
+    "eolFrom": "2024-07-31",
+    "isMaintained": false,
+    "latest": {
+     "name": "7.4",
+     "date": "2023-03-23",
+     "link": "https://pve.proxmox.com/wiki/Roadmap#Proxmox_VE_7.4"
+    },
+    "custom": null
+   },
+   {
+    "name": "6",
+    "codename": null,
+    "label": "6",
+    "releaseDate": "2019-07-16",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEol": true,
+    "eolFrom": "2022-09-30",
+    "isMaintained": false,
+    "latest": {
+     "name": "6.4",
+     "date": "2021-04-18",
+     "link": "https://pve.proxmox.com/wiki/Roadmap#Proxmox_VE_6.4"
+    },
+    "custom": null
+   },
+   {
+    "name": "5",
+    "codename": null,
+    "label": "5",
+    "releaseDate": "2017-07-04",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEol": true,
+    "eolFrom": "2020-07-31",
+    "isMaintained": false,
+    "latest": {
+     "name": "5.4",
+     "date": "2019-04-11",
+     "link": "https://pve.proxmox.com/wiki/Roadmap#Proxmox_VE_5.4"
+    },
+    "custom": null
+   },
+   {
+    "name": "4",
+    "codename": null,
+    "label": "4",
+    "releaseDate": "2015-10-06",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEol": true,
+    "eolFrom": "2018-06-30",
+    "isMaintained": false,
+    "latest": {
+     "name": "4.4",
+     "date": "2016-12-13",
+     "link": "https://pve.proxmox.com/wiki/Roadmap#Proxmox_VE_4.4"
+    },
+    "custom": null
+   },
+   {
+    "name": "3",
+    "codename": null,
+    "label": "3",
+    "releaseDate": "2013-05-24",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEol": true,
+    "eolFrom": "2017-02-28",
+    "isMaintained": false,
+    "latest": {
+     "name": "3.4",
+     "date": "2015-02-19",
+     "link": "https://pve.proxmox.com/wiki/Roadmap#Proxmox_VE_3.4"
+    },
+    "custom": null
+   },
+   {
+    "name": "2",
+    "codename": null,
+    "label": "2",
+    "releaseDate": "2012-03-30",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEol": true,
+    "eolFrom": "2014-05-31",
+    "isMaintained": false,
+    "latest": {
+     "name": "2.3",
+     "date": "2013-03-04",
+     "link": "https://pve.proxmox.com/wiki/Roadmap#Proxmox_VE_2.3"
+    },
+    "custom": null
+   },
+   {
+    "name": "1",
+    "codename": null,
+    "label": "1",
+    "releaseDate": "2008-10-29",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEol": true,
+    "eolFrom": "2013-01-31",
+    "isMaintained": false,
+    "latest": {
+     "name": "1.9",
+     "date": "2011-09-13",
+     "link": "https://pve.proxmox.com/wiki/Roadmap#Proxmox_VE_1.9"
     },
     "custom": null
    }

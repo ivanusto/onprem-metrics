@@ -6,7 +6,7 @@ and an alert 90 days out, not a line in someone's memory.
 
     eol-textfile.py --assets eol/assets.tsv --out /var/lib/node_exporter/textfile/eol.prom
     eol-textfile.py ... --refresh --cache /var/lib/onprem-metrics/eol      # check dates against endoflife.date
-    eol-textfile.py ... --fortigate https://192.168.2.99 --token-file /etc/onprem-metrics/fgt.token
+    eol-textfile.py ... --fortigate https://192.168.2.99:10443 --token-file /etc/onprem-metrics/fgt.token
     eol-textfile.py ... --offline       # tests: use the cache, never fetch
 
 Metrics (labels asset, component, kind, version, milestone, basis)
@@ -46,13 +46,18 @@ import time
 import urllib.request
 from datetime import datetime, timezone
 
-# milestone in the TSV -> field in endoflife.date's v1 release object
+# milestone in the TSV -> field in endoflife.date's v1 release object.
+# endoflife.date's three fields are active support (eoas), end of life (eol)
+# and extended support (eoes). For Debian that is regular security support,
+# LTS and ELTS: 12 has eoasFrom 2026-07-11, eolFrom 2028-06-30, eoesFrom
+# 2033-06-30 (read 2026-10-09). Ubuntu LTS has eoas = eol = standard support
+# end, and FortiOS has eoas = End of Engineering Support, eol = End of Support.
 EOL_FIELD = {
     "end_of_support": "eolFrom",
-    "security_support_end": "eolFrom",
+    "security_support_end": "eoasFrom",
     "end_of_engineering": "eoasFrom",
     "active_support_end": "eoasFrom",
-    "lts_end": "eoesFrom",
+    "lts_end": "eolFrom",
     "extended_support_end": "eoesFrom",
 }
 LABELS = ("asset", "component", "kind", "version", "milestone", "basis")
@@ -157,18 +162,27 @@ def compare(rows, cache, offline, max_age):
 
 # ---------- FortiGate licences ----------
 
-def walk_licences(obj, path=()):
-    """Yield (component, status, expires) for every object with a numeric expires."""
+def walk_licences(obj, path=(), parent_exp=None):
+    """Yield (component, status, expires) for every object with a numeric expires.
+
+    Skipped, as seen on a 60F with FortiOS 7.6.7: a free_license (the
+    FortiCloud sandbox tier carries the contract's date but never lapses),
+    and an object nested in a licence with the same expires
+    (iot_detection.definitions repeats iot_detection)."""
     if isinstance(obj, dict):
         exp = obj.get("expires")
+        own = None
         if isinstance(exp, (int, float)) and exp > 0:
-            yield ".".join(path) or "licence", str(obj.get("status", "")), int(exp)
+            own = int(exp)
+            status = str(obj.get("status", ""))
+            if status != "free_license" and own != parent_exp:
+                yield ".".join(path) or "licence", status, own
         for k, v in obj.items():
             if isinstance(v, (dict, list)):
-                yield from walk_licences(v, path + (str(k),))
+                yield from walk_licences(v, path + (str(k),), own if own is not None else parent_exp)
     elif isinstance(obj, list):
         for v in obj:
-            yield from walk_licences(v, path)
+            yield from walk_licences(v, path, parent_exp)
 
 
 def fortigate_licences(url, token, insecure):
@@ -230,7 +244,7 @@ def main():
     ap.add_argument("--cache", default="/var/lib/onprem-metrics/eol", help="cache dir for endoflife.date answers")
     ap.add_argument("--max-age", type=int, default=86400, help="seconds before a cached answer is fetched again")
     ap.add_argument("--offline", action="store_true", help="never fetch; use the cache as is (tests)")
-    ap.add_argument("--fortigate", help="base URL of the FortiGate, e.g. https://192.168.2.99")
+    ap.add_argument("--fortigate", help="base URL of the FortiGate, e.g. https://192.168.2.99:10443 (the admin port)")
     ap.add_argument("--token-file", help="file holding the read-only REST token")
     ap.add_argument("--fortigate-asset", default="fgt-edge", help="asset label for the licences")
     ap.add_argument("--insecure", action="store_true", help="do not verify the FortiGate's TLS certificate")

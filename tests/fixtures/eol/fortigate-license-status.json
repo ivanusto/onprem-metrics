@@ -2,48 +2,412 @@
  "http_method": "GET",
  "results": {
   "fortiguard": {
+   "type": "cloud_service_status",
+   "supported": true,
    "connected": true,
-   "fortigate_cloud_connected": false
+   "has_connected": true,
+   "connection_issue": false,
+   "last_connection_success": 1791508451,
+   "update_server_usa": false,
+   "next_scheduled_update": 1791515651,
+   "scheduled_updates_enabled": true,
+   "server_address": "173.243.140.6:443",
+   "fortigate_wan_ip": "203.0.113.30"
   },
   "forticare": {
+   "type": "cloud_service_status",
    "status": "registered",
-   "account": "x",
-   "support": {
-    "hardware": {
-     "status": "licensed",
-     "support_level": "Advanced HW",
-     "expires": 1806969600
-    },
-    "enhanced": {
-     "status": "licensed",
-     "support_level": "Premium",
-     "expires": 1806969600
-    }
-   }
+   "registration_status": "registered",
+   "registration_supported": true,
+   "account": "Confidential",
+   "support": {},
+   "company": "Example Co.",
+   "industry": ""
+  },
+  "forticloud": {
+   "type": "cloud_service_status",
+   "status": "cloud_na"
+  },
+  "security_rating": {
+   "type": "functionality_enabling",
+   "status": "no_license",
+   "entitlement": "FGSA"
   },
   "antivirus": {
+   "type": "downloaded_fds_object",
    "status": "expired",
-   "version": "92.00000",
-   "expires": 1757376000,
-   "type": "fortiguard"
+   "version": "1.00000",
+   "expires": 1758326400,
+   "entitlement": "AVDB",
+   "last_update": 1523268420,
+   "db_status": "db_type_extended",
+   "engine": {
+    "version": "7.00054",
+    "last_update": 1776172440
+   }
+  },
+  "mobile_malware": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "0.00000",
+   "expires": 1758326400,
+   "entitlement": "AVDB",
+   "last_update": 978278400
+  },
+  "ai_malware_detection": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "0.00000",
+   "expires": 1758326400,
+   "entitlement": "AVDB",
+   "last_update": 978278400
   },
   "ips": {
+   "type": "downloaded_fds_object",
    "status": "expired",
-   "version": "29.00000",
-   "expires": 1757376000,
-   "type": "fortiguard"
+   "version": "34.00087",
+   "expires": 1758326400,
+   "entitlement": "NIDS",
+   "last_update": 1758252964,
+   "last_update_attempt": 1758463201,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_sched",
+   "db_status": "db_type_normal",
+   "engine": {
+    "version": "7.01187",
+    "last_update": 1777453140,
+    "last_update_attempt": 1791508451,
+    "last_update_result_status": "update_result_not_authorized",
+    "last_update_method_status": "update_method_manual"
+   }
+  },
+  "industrial_db": {
+   "type": "downloaded_fds_object",
+   "status": "no_license",
+   "version": "6.00741",
+   "entitlement": "ISSS",
+   "last_update": 1448908200
+  },
+  "appctrl": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "6.00741",
+   "expires": 1758326400,
+   "entitlement": "FMWR",
+   "last_update": 1448908200
+  },
+  "genai_app": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "0.00000",
+   "expires": 1758326400,
+   "entitlement": "FMWR",
+   "last_update": 978278400
+  },
+  "internet_service_db": {
+   "type": "downloaded_fds_object",
+   "status": "licensed",
+   "version": "7.04335",
+   "last_update": 1758210300,
+   "last_update_attempt": 1791508451,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_manual"
+  },
+  "device_os_id": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "1.00193",
+   "expires": 1758326400,
+   "entitlement": "FMWR",
+   "last_update": 1757524623,
+   "last_update_attempt": 1791508451,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_sched"
+  },
+  "botnet_domain": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "3.01436",
+   "expires": 1758326400,
+   "entitlement": "AVDB",
+   "last_update": 1758267363,
+   "last_update_attempt": 1791508451,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_sched"
+  },
+  "data_leak_prevention": {
+   "type": "downloaded_fds_object",
+   "status": "no_license",
+   "version": "0.00000",
+   "entitlement": "DLDB",
+   "last_update": 978278400,
+   "last_update_attempt": 1791508451,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_manual"
+  },
+  "psirt_security_rating": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "6.00021",
+   "expires": 1758326400,
+   "entitlement": "FMWR",
+   "last_update": 1757214365,
+   "last_update_attempt": 1791508451,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_manual"
+  },
+  "timezone_database": {
+   "type": "downloaded_fds_object",
+   "status": "licensed",
+   "version": "1.00300",
+   "last_update": 0
+  },
+  "outbreak_security_rating": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "6.00021",
+   "expires": 1758326400,
+   "entitlement": "FMWR",
+   "last_update": 1757214365,
+   "last_update_attempt": 1791508451,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_manual"
+  },
+  "icdb": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "1.00051",
+   "expires": 1758326400,
+   "entitlement": "FMWR",
+   "last_update": 1757443443,
+   "last_update_attempt": 1791508451,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_sched"
+  },
+  "inline_casb": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "1.00008",
+   "expires": 1758326400,
+   "entitlement": "FMWR",
+   "last_update": 1757237472,
+   "last_update_attempt": 1791508451,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_sched"
+  },
+  "local_in_virtual_patching": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "0.00000",
+   "expires": 1758326400,
+   "entitlement": "FMWR",
+   "last_update": 1756398682,
+   "last_update_attempt": 1756398682,
+   "last_update_result_status": "update_result_success",
+   "last_update_method_status": "update_method_sched"
+  },
+  "geoip_db": {
+   "type": "downloaded_fds_object",
+   "status": "licensed",
+   "version": "3.00172",
+   "last_update": 1681348980,
+   "last_update_attempt": 1791508451,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_manual"
+  },
+  "trusted_cert_db": {
+   "type": "downloaded_fds_object",
+   "status": "licensed",
+   "version": "1.00062",
+   "last_update": 1767967020,
+   "last_update_attempt": 1791508451,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_manual"
+  },
+  "malicious_urls": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "5.00540",
+   "expires": 1758326400,
+   "entitlement": "NIDS",
+   "last_update": 1758270978,
+   "last_update_attempt": 1758463201,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_sched"
+  },
+  "blacklisted_certificates": {
+   "type": "downloaded_fds_object",
+   "status": "expired",
+   "version": "1.00553",
+   "expires": 1758326400,
+   "entitlement": "FURL",
+   "last_update": 1758011987,
+   "last_update_attempt": 1791508451,
+   "last_update_result_status": "update_result_not_authorized",
+   "last_update_method_status": "update_method_sched"
+  },
+  "firmware_updates": {
+   "type": "live_fortiguard_service",
+   "status": "expired",
+   "expires": 1758326400,
+   "entitlement": "FMWR"
   },
   "web_filtering": {
+   "type": "live_fortiguard_service",
    "status": "expired",
-   "expires": 1757376000,
-   "type": "fortiguard",
-   "category": "FortiGuard Web Filtering"
+   "expires": 1758326400,
+   "entitlement": "FURL",
+   "category_list_version": 10,
+   "running": true
+  },
+  "outbreak_prevention": {
+   "type": "live_fortiguard_service",
+   "status": "expired",
+   "expires": 1758326400,
+   "entitlement": "ZHVO"
+  },
+  "antispam": {
+   "type": "live_fortiguard_service",
+   "status": "expired",
+   "expires": 1758326400,
+   "entitlement": "SPAM"
+  },
+  "sdwan_network_monitor": {
+   "type": "live_fortiguard_service",
+   "status": "no_license",
+   "entitlement": "SWNM"
+  },
+  "iot_detection": {
+   "type": "live_fortiguard_service",
+   "status": "expired",
+   "expires": 1758326400,
+   "entitlement": "IOTH",
+   "definitions": {
+    "type": "downloaded_fds_object",
+    "status": "expired",
+    "version": "34.00087",
+    "expires": 1758326400,
+    "entitlement": "IOTH",
+    "last_update": 1758252964,
+    "last_update_attempt": 1791508451,
+    "last_update_result_status": "update_result_not_authorized",
+    "last_update_method_status": "update_method_sched"
+   }
+  },
+  "ot_detection": {
+   "detect_definitions": {
+    "type": "downloaded_fds_object",
+    "status": "no_license",
+    "version": "0.00000",
+    "entitlement": "ISSS",
+    "last_update": 978278400,
+    "last_update_attempt": 1791508451,
+    "last_update_result_status": "update_result_not_authorized",
+    "last_update_method_status": "update_method_manual"
+   },
+   "patch_definitions": {
+    "type": "downloaded_fds_object",
+    "status": "no_license",
+    "version": "0.00000",
+    "entitlement": "ISSS",
+    "last_update": 978278400,
+    "last_update_attempt": 1791508451,
+    "last_update_result_status": "update_result_not_authorized",
+    "last_update_method_status": "update_method_manual"
+   }
+  },
+  "forticloud_logging": {
+   "type": "live_cloud_service",
+   "status": "free_license",
+   "used_bytes": 0,
+   "max_bytes": 0,
+   "log_retention_days": 7
+  },
+  "forticloud_sandbox": {
+   "type": "live_cloud_service",
+   "status": "free_license",
+   "expires": 1758326400,
+   "entitlement": "AVDB",
+   "files_uploaded_daily": 0,
+   "max_files_daily": 100
+  },
+  "fortianalyzer_cloud": {
+   "type": "live_cloud_service",
+   "status": "no_license",
+   "entitlement": "FAZC"
+  },
+  "fortianalyzer_cloud_premium": {
+   "type": "live_cloud_service",
+   "status": "no_license",
+   "entitlement": "AFAC"
+  },
+  "fortimanager_cloud": {
+   "type": "live_cloud_service",
+   "status": "no_license",
+   "entitlement": "FMGC",
+   "deprecated": true
+  },
+  "fortisandbox_cloud": {
+   "type": "live_cloud_service",
+   "status": "no_license",
+   "entitlement": "FSAC"
+  },
+  "fortiguard_ai_based_sandbox": {
+   "type": "live_cloud_service",
+   "status": "no_license",
+   "entitlement": "FAIS"
+  },
+  "forticonverter": {
+   "type": "live_cloud_service",
+   "status": "no_license",
+   "entitlement": "FCSS"
+  },
+  "sdwan_overlay_aas": {
+   "type": "live_cloud_service",
+   "status": "no_license",
+   "entitlement": "SWOS"
+  },
+  "fortisase_private_access": {
+   "type": "live_cloud_service",
+   "status": "no_license",
+   "entitlement": "FSPA"
+  },
+  "fortisase_lan_extension": {
+   "type": "live_cloud_service",
+   "status": "no_license",
+   "entitlement": "FSFG"
+  },
+  "sovereign_sase": {
+   "type": "live_cloud_service",
+   "status": "no_license",
+   "entitlement": "SSFL"
+  },
+  "fortiems_cloud": {
+   "type": "account_level_live_cloud_service",
+   "status": "no_license",
+   "entitlement": "FCEM"
+  },
+  "fortimanager_cloud_alci": {
+   "type": "account_level_live_cloud_service",
+   "status": "no_license",
+   "entitlement": "FMGC"
+  },
+  "fortisandbox_cloud_alci": {
+   "type": "account_level_live_cloud_service",
+   "status": "no_license",
+   "entitlement": "FSAP"
   },
   "vdom": {
-   "type": "default",
+   "type": "platform",
    "can_upgrade": false,
    "used": 1,
    "max": 10
+  },
+  "sms": {
+   "type": "other",
+   "status": "no_license",
+   "used": 0,
+   "max": 0
   }
  },
  "vdom": "root",
@@ -52,5 +416,5 @@
  "status": "success",
  "serial": "FGT60FTK00000000",
  "version": "v7.6.7",
- "build": 3700
+ "build": 3704
 }

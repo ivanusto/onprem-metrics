@@ -87,10 +87,19 @@ class Textfile(unittest.TestCase):
         for line in text.splitlines():
             if line.startswith("asset_eol_source_mismatch{"):
                 self.assertTrue(line.endswith(" 0"), line)
-        # licences walked out of the FortiGate JSON, nested ones included
-        self.assertIn('asset_eol_timestamp_seconds{asset="fgt-edge",component="web_filtering",kind="licence",version="-",milestone="expires",basis="licence"} 1757376000', text)
-        self.assertIn('asset_eol_timestamp_seconds{asset="fgt-edge",component="forticare.support.hardware",kind="licence"', text)
+        # Debian's fields: security support is eoasFrom, LTS is eolFrom (both 0 above)
+        self.assertIn('asset_eol_source_mismatch{asset="qdevice",component="Debian",kind="os",version="12",milestone="lts_end",basis="vendor"} 0', text)
+        # Proxmox VE 9 has no date on endoflife.date yet: no comparison, no false 1
+        self.assertNotIn('asset_eol_source_mismatch{asset="pve1",component="Proxmox VE"', text)
+        # licences walked out of the 60F's real answer (2026-10-09, serial and
+        # addresses masked): 20 expired FortiGuard services, all 2025-09-20
+        self.assertIn('asset_eol_timestamp_seconds{asset="fgt-edge",component="web_filtering",kind="licence",version="-",milestone="expires",basis="licence"} 1758326400', text)
         self.assertIn('asset_licence_status{asset="fgt-edge",component="web_filtering",status="expired"} 1', text)
+        lic = [l for l in text.splitlines() if l.startswith("asset_eol_timestamp_seconds{") and 'kind="licence"' in l]
+        self.assertEqual(len(lic), 20)
+        # the free sandbox tier and the definitions nested in iot_detection are not licences of their own
+        self.assertNotIn("forticloud_sandbox", text)
+        self.assertNotIn("iot_detection.definitions", text)
         # the licence placeholder row in the TSV is neither a timestamp nor an unknown
         self.assertNotIn('component="FortiGuard licences"', text)
         self.assertIn("eol_textfile_last_run_timestamp ", text)
@@ -124,9 +133,11 @@ class Textfile(unittest.TestCase):
         self.assertIn("asset_eol_timestamp_seconds{", text)
 
     def test_licence_walk(self):
-        doc = {"results": {"a": {"status": "x", "expires": 5}, "b": {"support": {"hw": {"expires": 7}}}, "c": {"expires": 0}, "d": [{"expires": 9}]}}
+        doc = {"results": {"a": {"status": "x", "expires": 5, "defs": {"expires": 5}}, "b": {"support": {"hw": {"expires": 7}}},
+                           "c": {"expires": 0}, "d": [{"expires": 9}], "e": {"status": "free_license", "expires": 11},
+                           "f": {"expires": 13, "defs": {"expires": 15}}}}
         got = sorted(eol.walk_licences(doc["results"]))
-        self.assertEqual(got, [("a", "x", 5), ("b.support.hw", "", 7), ("d", "", 9)])
+        self.assertEqual(got, [("a", "x", 5), ("b.support.hw", "", 7), ("d", "", 9), ("f", "", 13), ("f.defs", "", 15)])
 
 
 if __name__ == "__main__":
