@@ -133,7 +133,10 @@ def table(title, x, y, w, h, targets, desc="", overrides=(), hide=(), rename=Non
               options={"showHeader": True, "cellHeight": "sm", "footer": {"show": False}})
     org = {"excludeByName": {k: True for k in NOISE + tuple(hide) if k not in show}, "renameByName": rename or {}}
     if order:
-        org["indexByName"] = {k: i for i, k in enumerate(order)}
+        # organize applies indexByName to the original field names, before
+        # renameByName, so a renamed column is looked up by its old name
+        orig = {v: k for k, v in (rename or {}).items()}
+        org["indexByName"] = {orig.get(k, k): i for i, k in enumerate(order)}
     p["transformations"] = [{"id": "merge", "options": {}}, {"id": "organize", "options": org}]
     if sort:
         p["options"]["sortBy"] = [{"displayName": sort, "desc": False}]
@@ -144,7 +147,7 @@ def row(title, y, collapsed=False):
     return {"id": nid(), "type": "row", "title": title, "collapsed": collapsed,
             "gridPos": {"x": 0, "y": y, "w": 24, "h": 1}, "panels": []}
 
-def cell(field, thresholds=None, unit=None, mappings=None, width=None):
+def cell(field, thresholds=None, unit=None, mappings=None, width=None, decimals=None):
     """Colour one table column. The color mode has to be set to thresholds
     on the column itself, or Grafana paints the cell with the series
     palette colour and the thresholds are ignored."""
@@ -156,6 +159,8 @@ def cell(field, thresholds=None, unit=None, mappings=None, width=None):
         props.append({"id": "mappings", "value": mappings})
     if unit:
         props.append({"id": "unit", "value": unit})
+    if decimals is not None:
+        props.append({"id": "decimals", "value": decimals})
     if width:
         props.append({"id": "custom.width", "value": width})
     return {"matcher": {"id": "byName", "options": field}, "properties": props}
@@ -378,7 +383,7 @@ def build():
                    rename={"asset": "資產", "component": "元件", "kind": "種類", "version": "版本", "milestone": "里程碑", "basis": "依據", "Value": "剩餘天數"},
                    order=("資產", "元件", "種類", "版本", "里程碑", "依據", "剩餘天數"), sort="剩餘天數",
                    overrides=[col("資產", width=110), col("種類", width=80), col("版本", width=80), col("依據", width=80),
-                              cell("剩餘天數", steps((None, "red"), (EOL_CRIT_DAYS, "orange"), (EOL_WARN_DAYS, "green")), "d", width=110)]))
+                              cell("剩餘天數", steps((None, "red"), (EOL_CRIT_DAYS, "orange"), (EOL_WARN_DAYS, "green")), "none", width=110, decimals=0)]))
     P.append(table("授權到期（天）", 16, y, 8, 11,
                    [target('(asset_eol_timestamp_seconds{kind="licence"} - time()) / 86400', instant=True, fmt="table")],
                    desc="eol-textfile.py --fortigate 從 /api/v2/monitor/license/status 讀的每一項。負數是已到期",
@@ -386,7 +391,7 @@ def build():
                    rename={"asset": "資產", "component": "授權", "Value": "剩餘天數"},
                    order=("資產", "授權", "剩餘天數"), sort="剩餘天數",
                    overrides=[col("資產", width=90),
-                              cell("剩餘天數", steps((None, "red"), (EOL_CRIT_DAYS, "orange"), (EOL_WARN_DAYS, "green")), "d", width=100)]))
+                              cell("剩餘天數", steps((None, "red"), (EOL_CRIT_DAYS, "orange"), (EOL_WARN_DAYS, "green")), "none", width=100, decimals=0)]))
     y += 11
 
     # ---- Row 6: the pipeline itself -------------------------------------

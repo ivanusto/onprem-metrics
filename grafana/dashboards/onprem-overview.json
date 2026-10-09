@@ -1310,11 +1310,11 @@
        "Value": "溫度"
       },
       "indexByName": {
-       "NAS": 0,
-       "槽": 1,
-       "型號": 2,
-       "狀態": 3,
-       "溫度": 4
+       "nas": 0,
+       "diskIndex": 1,
+       "diskModel": 2,
+       "qnap_disk_status": 3,
+       "Value": 4
       }
      }
     }
@@ -2853,12 +2853,12 @@
        "Value #D": "速率"
       },
       "indexByName": {
-       "來源": 0,
-       "演練": 1,
-       "結果": 2,
-       "RTO": 3,
-       "RPO": 4,
-       "速率": 5
+       "source": 0,
+       "label": 1,
+       "Value #A": 2,
+       "Value #B": 3,
+       "Value #C": 4,
+       "Value #D": 5
       }
      }
     }
@@ -3457,7 +3457,11 @@
        },
        {
         "id": "unit",
-        "value": "d"
+        "value": "none"
+       },
+       {
+        "id": "decimals",
+        "value": 0
        },
        {
         "id": "custom.width",
@@ -3507,13 +3511,13 @@
        "Value": "剩餘天數"
       },
       "indexByName": {
-       "資產": 0,
-       "元件": 1,
-       "種類": 2,
-       "版本": 3,
-       "里程碑": 4,
-       "依據": 5,
-       "剩餘天數": 6
+       "asset": 0,
+       "component": 1,
+       "kind": 2,
+       "version": 3,
+       "milestone": 4,
+       "basis": 5,
+       "Value": 6
       }
      }
     }
@@ -3607,7 +3611,11 @@
        },
        {
         "id": "unit",
-        "value": "d"
+        "value": "none"
+       },
+       {
+        "id": "decimals",
+        "value": 0
        },
        {
         "id": "custom.width",
@@ -3657,9 +3665,9 @@
        "Value": "剩餘天數"
       },
       "indexByName": {
-       "資產": 0,
-       "授權": 1,
-       "剩餘天數": 2
+       "asset": 0,
+       "component": 1,
+       "Value": 2
       }
      }
     }
@@ -3789,7 +3797,7 @@
        "job": 0,
        "instance": 1,
        "nas": 2,
-       "狀態": 3
+       "Value": 3
       }
      }
     }
