@@ -31,7 +31,7 @@
 | Proxmox VE 9 | [endoflife.date/proxmox-ve](https://endoflife.date/proxmox-ve) | 推算 2028-08-09 | Proxmox 說至少與對應的 Debian 一樣長，PVE 8 在 2026-08-31 結束。endoflife.date 對 9 還沒有日期，`eol_ref` 指向它，一公布就會出現不一致 |
 | Debian 13 | [endoflife.date/debian](https://endoflife.date/debian) | 安全支援 2028-08-09，LTS 2030-06-30 | PVE 9 的底層 |
 | Debian 12 | 同上 | 安全支援 2026-07-11，LTS 2028-06-30 | Day 15 的 QDevice VM，SSH 橫幅確認仍是 bookworm，已過安全支援期 |
-| QuTS hero、TS-464 | [QNAP 產品支援狀態](https://www.qnap.com/en/product/eol-product) | ? | QNAP 以機型公布支援狀態，TS-464 目前支援中、終止日未定。endoflife.date 沒有 QNAP 的產品 |
+| QuTS hero、TS-464 | [QNAP 產品支援狀態](https://www.qnap.com/en/product/eol-product) | ? | QNAP 以機型公布支援狀態，官方頁面待查。第三方的 [endoflife.ai](https://endoflife.ai/qnap-nas/ts-464) 列 TS-464 為支援中、終止日未定。endoflife.date 沒有 QNAP 的產品 |
 | Node.js 22 | [endoflife.date/nodejs](https://endoflife.date/nodejs) | 2027-04-30 | viewer 的建置映像。Node 20 已於 2026-04-30 結束 |
 
 endoflife.date 是社群維護的彙整，日期來自各廠商的公告，`--refresh` 拿它當第二個眼睛，不當唯一來源。

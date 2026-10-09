@@ -39,5 +39,5 @@ qdevice	Debian	os	12	lts_end	2028-06-30	vendor	debian/12	https://endoflife.date/
 collector	Ubuntu	os	24.04	security_support_end	2029-05-31	vendor	ubuntu/24.04	https://endoflife.date/ubuntu	the collector VM (24.04.5 LTS); ESM to 2034-04-25 needs a Pro subscription
 nas-primary	QuTS hero	os	6.0.2	end_of_support	?	unknown	-	https://www.qnap.com/en/product/eol-product	QNAP publishes support status per model, not per QuTS hero release (待查)
 nas-secondary	QuTS hero	os	6.0.2	end_of_support	?	unknown	-	https://www.qnap.com/en/product/eol-product	as nas-primary
-nas-secondary	TS-464	hardware	TS-464	end_of_support	?	unknown	-	https://www.qnap.com/en/product/eol-product	QNAP lists the model as supported with no end date; endoflife.date has no QNAP product
+nas-secondary	TS-464	hardware	TS-464	end_of_support	?	unknown	-	https://www.qnap.com/en/product/eol-product	QNAP's product support status page is the authority (待查, the page needs a browser); the third-party endoflife.ai lists the TS-464 as supported with no end date; endoflife.date has no QNAP product
 viewer	Node.js (build image)	runtime	22	end_of_support	2027-04-30	vendor	nodejs/22	https://endoflife.date/nodejs	fortigate-log-viewer Dockerfile, node:22-alpine by digest since Day 24; Node 20 ended 2026-04-30
