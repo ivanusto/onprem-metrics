@@ -1,0 +1,53 @@
+{
+ "schema_version": "1.2.0",
+ "generated_at": "2026-10-08T00:00:00Z",
+ "result": {
+  "name": "nodejs",
+  "label": "Node.js",
+  "category": "os",
+  "releases": [
+   {
+    "name": "22",
+    "codename": null,
+    "label": "22",
+    "releaseDate": "2024-04-24",
+    "isLts": true,
+    "ltsFrom": "2024-04-24",
+    "isEoas": false,
+    "eoasFrom": "2025-10-21",
+    "isEol": false,
+    "eolFrom": "2027-04-30",
+    "isEoes": null,
+    "eoesFrom": null,
+    "isMaintained": true,
+    "latest": {
+     "name": "22.x",
+     "date": "2024-04-24",
+     "link": null
+    },
+    "custom": null
+   },
+   {
+    "name": "20",
+    "codename": null,
+    "label": "20",
+    "releaseDate": "2023-04-18",
+    "isLts": true,
+    "ltsFrom": "2023-04-18",
+    "isEoas": false,
+    "eoasFrom": "2024-10-22",
+    "isEol": false,
+    "eolFrom": "2026-04-30",
+    "isEoes": null,
+    "eoesFrom": null,
+    "isMaintained": false,
+    "latest": {
+     "name": "20.x",
+     "date": "2023-04-18",
+     "link": null
+    },
+    "custom": null
+   }
+  ]
+ }
+}

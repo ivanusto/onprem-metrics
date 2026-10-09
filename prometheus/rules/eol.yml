@@ -1,0 +1,42 @@
+# Day 25: asset lifecycle. eol/assets.tsv names what has a support end, a
+# licence expiry or a hardware end-of-support; textfile/eol-textfile.py
+# writes it as asset_eol_timestamp_seconds (unix time) once a day. The rules
+# turn a date into "days left" and raise their voice at 90, 30 and 0. An
+# asset with no published date is asset_eol_unknown and stays visible as
+# info until someone finds the date or decides there is none to find.
+groups:
+  - name: eol
+    rules:
+      - alert: EolTextfileStale
+        expr: time() - eol_textfile_last_run_timestamp > 2 * 86400
+        labels: {severity: warning}
+        annotations: {summary: "eol-textfile has not run for two days, lifecycle metrics are stale"}
+      # 90 days is one procurement cycle in this lab: a quote, a change
+      # record (Day 26), a maintenance window, and slack for the vendor.
+      - alert: AssetEolWithin90Days
+        expr: 0 < (asset_eol_timestamp_seconds - time()) / 86400 <= 90
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.asset }} {{ $labels.component }} {{ $labels.version }}: {{ $labels.milestone }} in {{ $value | printf \"%.0f\" }} days ({{ $labels.basis }})"}
+      - alert: AssetEolWithin30Days
+        expr: 0 < (asset_eol_timestamp_seconds - time()) / 86400 <= 30
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.asset }} {{ $labels.component }} {{ $labels.version }}: {{ $labels.milestone }} in {{ $value | printf \"%.0f\" }} days ({{ $labels.basis }})"}
+      # Already past. A licence that expired (Day 24's Web Filtering) or a
+      # distro past its security support (the QDevice VM) is a finding, so
+      # it pages until the row is fixed, the asset upgraded, or the risk
+      # accepted in writing and the row changed to say so.
+      - alert: AssetEolPassed
+        expr: (time() - asset_eol_timestamp_seconds) / 86400 >= 0
+        labels: {severity: critical}
+        annotations: {summary: "{{ $labels.asset }} {{ $labels.component }} {{ $labels.version }}: {{ $labels.milestone }} was {{ $value | printf \"%.0f\" }} days ago ({{ $labels.basis }})"}
+      - alert: AssetEolUnknown
+        expr: asset_eol_unknown == 1
+        labels: {severity: info}
+        annotations: {summary: "{{ $labels.asset }} {{ $labels.component }} {{ $labels.version }}: no {{ $labels.milestone }} date on record, see the note in eol/assets.tsv"}
+      # endoflife.date and the TSV disagree: a vendor moved a date (Fortinet
+      # did, March 2026) or the TSV has a typo. Either way a human reads
+      # both and edits the TSV with the reason.
+      - alert: AssetEolSourceMismatch
+        expr: asset_eol_source_mismatch == 1
+        labels: {severity: info}
+        annotations: {summary: "{{ $labels.asset }} {{ $labels.component }} {{ $labels.version }}: endoflife.date gives a different {{ $labels.milestone }} than eol/assets.tsv, see eol-textfile's log"}

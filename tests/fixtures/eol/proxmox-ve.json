@@ -1,0 +1,53 @@
+{
+ "schema_version": "1.2.0",
+ "generated_at": "2026-10-08T00:00:00Z",
+ "result": {
+  "name": "proxmox-ve",
+  "label": "Proxmox VE",
+  "category": "os",
+  "releases": [
+   {
+    "name": "9",
+    "codename": null,
+    "label": "9",
+    "releaseDate": "2025-08-05",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": false,
+    "eoasFrom": null,
+    "isEol": false,
+    "eolFrom": null,
+    "isEoes": null,
+    "eoesFrom": null,
+    "isMaintained": true,
+    "latest": {
+     "name": "9.x",
+     "date": "2025-08-05",
+     "link": null
+    },
+    "custom": null
+   },
+   {
+    "name": "8",
+    "codename": null,
+    "label": "8",
+    "releaseDate": "2023-06-22",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": false,
+    "eoasFrom": "2026-08-31",
+    "isEol": false,
+    "eolFrom": "2026-08-31",
+    "isEoes": null,
+    "eoesFrom": null,
+    "isMaintained": false,
+    "latest": {
+     "name": "8.x",
+     "date": "2023-06-22",
+     "link": null
+    },
+    "custom": null
+   }
+  ]
+ }
+}

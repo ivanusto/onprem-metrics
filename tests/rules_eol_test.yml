@@ -1,0 +1,96 @@
+# promtool test rules tests/rules_eol_test.yml
+# promtool's clock starts at 0 (1970-01-01), so the fixtures put the dates
+# relative to that: 100 days = 8640000 s.
+rule_files:
+  - ../prometheus/rules/eol.yml
+
+evaluation_interval: 1h
+
+tests:
+  # one asset walking through 90, 30 and 0 days left. eval_time counts from 0.
+  - interval: 1h
+    input_series:
+      - series: 'asset_eol_timestamp_seconds{asset="fgt-edge",component="FortiOS",kind="firmware",version="7.6.7",milestone="end_of_support",basis="vendor"}'
+        values: "8640000x2500"      # 100 days after epoch, held
+    alert_rule_test:
+      - eval_time: 9d               # 91 days left: nothing
+        alertname: AssetEolWithin90Days
+        exp_alerts: []
+      - eval_time: 10d              # exactly 90 days left: warning
+        alertname: AssetEolWithin90Days
+        exp_alerts:
+          - exp_labels: {severity: warning, asset: fgt-edge, component: FortiOS, kind: firmware, version: "7.6.7", milestone: end_of_support, basis: vendor}
+            exp_annotations:
+              summary: "fgt-edge FortiOS 7.6.7: end_of_support in 90 days (vendor)"
+      - eval_time: 70d              # 30 days left: both warning and critical
+        alertname: AssetEolWithin30Days
+        exp_alerts:
+          - exp_labels: {severity: critical, asset: fgt-edge, component: FortiOS, kind: firmware, version: "7.6.7", milestone: end_of_support, basis: vendor}
+            exp_annotations:
+              summary: "fgt-edge FortiOS 7.6.7: end_of_support in 30 days (vendor)"
+      - eval_time: 70d
+        alertname: AssetEolWithin90Days
+        exp_alerts:
+          - exp_labels: {severity: warning, asset: fgt-edge, component: FortiOS, kind: firmware, version: "7.6.7", milestone: end_of_support, basis: vendor}
+            exp_annotations:
+              summary: "fgt-edge FortiOS 7.6.7: end_of_support in 30 days (vendor)"
+      - eval_time: 99d
+        alertname: AssetEolPassed
+        exp_alerts: []
+      - eval_time: 103d             # three days past: critical, the two "within" rules are quiet
+        alertname: AssetEolPassed
+        exp_alerts:
+          - exp_labels: {severity: critical, asset: fgt-edge, component: FortiOS, kind: firmware, version: "7.6.7", milestone: end_of_support, basis: vendor}
+            exp_annotations:
+              summary: "fgt-edge FortiOS 7.6.7: end_of_support was 3 days ago (vendor)"
+      - eval_time: 103d
+        alertname: AssetEolWithin30Days
+        exp_alerts: []
+
+  # an expired licence is "passed" from the first sample
+  - interval: 1h
+    input_series:
+      - series: 'asset_eol_timestamp_seconds{asset="fgt-edge",component="web_filtering",kind="licence",version="-",milestone="expires",basis="licence"}'
+        values: "86400x300"
+    alert_rule_test:
+      - eval_time: 11d
+        alertname: AssetEolPassed
+        exp_alerts:
+          - exp_labels: {severity: critical, asset: fgt-edge, component: web_filtering, kind: licence, version: "-", milestone: expires, basis: licence}
+            exp_annotations:
+              summary: "fgt-edge web_filtering -: expires was 10 days ago (licence)"
+
+  # unknown and mismatch are info, stale is a warning after two days
+  - interval: 1h
+    input_series:
+      - series: 'asset_eol_unknown{asset="nas-primary",component="TS-464",kind="hardware",version="TS-464",milestone="end_of_support",basis="unknown"}'
+        values: "1x100"
+      - series: 'asset_eol_source_mismatch{asset="qdevice",component="Debian",kind="os",version="12",milestone="lts_end",basis="vendor"}'
+        values: "0x50 1x50"
+      - series: 'eol_textfile_last_run_timestamp'
+        values: "0x100"
+    alert_rule_test:
+      - eval_time: 1h
+        alertname: AssetEolUnknown
+        exp_alerts:
+          - exp_labels: {severity: info, asset: nas-primary, component: TS-464, kind: hardware, version: TS-464, milestone: end_of_support, basis: unknown}
+            exp_annotations:
+              summary: "nas-primary TS-464 TS-464: no end_of_support date on record, see the note in eol/assets.tsv"
+      - eval_time: 49h
+        alertname: AssetEolSourceMismatch
+        exp_alerts: []
+      - eval_time: 51h
+        alertname: AssetEolSourceMismatch
+        exp_alerts:
+          - exp_labels: {severity: info, asset: qdevice, component: Debian, kind: os, version: "12", milestone: lts_end, basis: vendor}
+            exp_annotations:
+              summary: "qdevice Debian 12: endoflife.date gives a different lts_end than eol/assets.tsv, see eol-textfile's log"
+      - eval_time: 47h
+        alertname: EolTextfileStale
+        exp_alerts: []
+      - eval_time: 49h
+        alertname: EolTextfileStale
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations:
+              summary: "eol-textfile has not run for two days, lifecycle metrics are stale"

@@ -1,0 +1,43 @@
+# onprem-metrics eol/assets.tsv (Day 25): what in this lab has a support end,
+# a licence expiry or a hardware end-of-support, and where that date comes
+# from. One row per (asset, component, milestone). Tab separated.
+#
+#   asset       the thing, named as the rest of the series names it
+#   component   what has the lifecycle: os, firmware, hardware, runtime, licence
+#   kind        os | firmware | hardware | runtime | licence
+#   version     as installed, as text
+#   milestone   end_of_support | end_of_engineering | security_support_end |
+#               lts_end | extended_support_end | end_of_order | expires
+#   date        YYYY-MM-DD, or ? when not published / not yet looked up
+#   basis       vendor    the vendor published this date
+#               estimate  derived (e.g. a distro's base OS), say how in note
+#               licence   read live from the device (eol-textfile.py --fortigate)
+#               unknown   nobody has published one yet; the row is a reminder
+#   eol_ref     endoflife.date product/release for --refresh, or -
+#   source      URL the date was read from
+#   note        free text; "待查" marks what is still to be confirmed on site
+#
+# Every ? becomes asset_eol_unknown{...} 1 so the gap is visible in Grafana
+# instead of in someone's memory. Dates are checked against endoflife.date
+# by --refresh; a disagreement becomes asset_eol_source_mismatch{...} 1.
+asset	component	kind	version	milestone	date	basis	eol_ref	source	note
+fgt-edge	FortiOS	firmware	7.6.7	end_of_engineering	2028-07-25	vendor	fortios/7.6	https://endoflife.date/fortios	Fortinet CSB-260330-1 (March 2026) moved 7.6 EOES from 2027-07-25
+fgt-edge	FortiOS	firmware	7.6.7	end_of_support	2030-01-25	vendor	fortios/7.6	https://endoflife.date/fortios	same bulletin, EOS from 2029-01-25
+fgt-edge	FortiGate 60F	hardware	60F	end_of_order	?	unknown	-	https://support.fortinet.com/Information/ProductLifeCycle.aspx	no end-of-order announced for the F series as of 2026-10 (待查 on the support portal, login needed)
+fgt-edge	FortiGuard licences	licence	-	expires	?	licence	-	GET /api/v2/monitor/license/status	filled live by eol-textfile.py --fortigate; Web Filtering is already expired (Day 24)
+fap-01	FortiAP 221E	hardware	221E	end_of_support	?	unknown	-	https://support.fortinet.com/Information/ProductLifeCycle.aspx	two access points; 待查 whether the 221E has an EOS date
+spark01	DGX OS	os	7.6.0	end_of_support	?	unknown	-	https://docs.nvidia.com/dgx/dgx-os-7-user-guide/release_notes.html	NVIDIA publishes no end date for DGX OS 7; DGX OS 8 exists and 7.6.0 is the required step before it (待查 the upgrade decision)
+spark01	Ubuntu (DGX OS base)	os	24.04	security_support_end	2029-05-31	estimate	ubuntu/24.04	https://endoflife.date/ubuntu	the floor under DGX OS 7; ESM to 2034-04-25 needs a Pro subscription
+spark02	DGX OS	os	7.6.0	end_of_support	?	unknown	-	https://docs.nvidia.com/dgx/dgx-os-7-user-guide/release_notes.html	as spark01
+spark02	Ubuntu (DGX OS base)	os	24.04	security_support_end	2029-05-31	estimate	ubuntu/24.04	https://endoflife.date/ubuntu	as spark01
+pve1	Proxmox VE	os	9.0	end_of_support	2028-08-09	estimate	debian/13	https://endoflife.date/proxmox-ve	Proxmox: "supported at least as long as the corresponding Debian version"; PVE 8 ended 2026-08-31; the date here is Debian 13 security support end (待查 Proxmox's own announcement when it comes)
+pve1	Debian (PVE base)	os	13	security_support_end	2028-08-09	vendor	debian/13	https://endoflife.date/debian	Debian LTS to 2030-06-30
+pve2	Proxmox VE	os	9.0	end_of_support	2028-08-09	estimate	debian/13	https://endoflife.date/proxmox-ve	as pve1
+pve2	Debian (PVE base)	os	13	security_support_end	2028-08-09	vendor	debian/13	https://endoflife.date/debian	as pve1
+qdevice	Debian	os	12	security_support_end	2026-07-11	vendor	debian/12	https://endoflife.date/debian	Day 15's qnetd VM was installed as Debian 12 (bookworm); regular security support ended, LTS team until 2028-06-30 (待查 /etc/debian_version on the VM, then plan the upgrade)
+qdevice	Debian	os	12	lts_end	2028-06-30	vendor	debian/12	https://endoflife.date/debian	Debian LTS
+collector	Debian	os	?	security_support_end	?	unknown	-	-	the 2 vCPU collector VM; 待查 which release it runs, then copy the debian row
+nas-primary	QuTS hero	os	6.0.2	end_of_support	?	unknown	-	https://www.qnap.com/en/product/eol-product	QNAP publishes product support status per model, not per QuTS hero release (待查)
+nas-primary	TS-464	hardware	TS-464	end_of_support	?	unknown	qnap-nas/TS-464	https://endoflife.date/qnap-nas	endoflife.date lists the TS-464 as supported, EOL TBD
+nas-secondary	QuTS hero	os	6.0.2	end_of_support	?	unknown	-	https://www.qnap.com/en/product/eol-product	as nas-primary (待查 model and release of the second NAS)
+viewer	Node.js (build image)	runtime	22	end_of_support	2027-04-30	vendor	nodejs/22	https://endoflife.date/nodejs	fortigate-log-viewer Dockerfile, node:22-alpine by digest since Day 24; Node 20 ended 2026-04-30

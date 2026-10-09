@@ -1,0 +1,56 @@
+{
+ "http_method": "GET",
+ "results": {
+  "fortiguard": {
+   "connected": true,
+   "fortigate_cloud_connected": false
+  },
+  "forticare": {
+   "status": "registered",
+   "account": "x",
+   "support": {
+    "hardware": {
+     "status": "licensed",
+     "support_level": "Advanced HW",
+     "expires": 1806969600
+    },
+    "enhanced": {
+     "status": "licensed",
+     "support_level": "Premium",
+     "expires": 1806969600
+    }
+   }
+  },
+  "antivirus": {
+   "status": "expired",
+   "version": "92.00000",
+   "expires": 1757376000,
+   "type": "fortiguard"
+  },
+  "ips": {
+   "status": "expired",
+   "version": "29.00000",
+   "expires": 1757376000,
+   "type": "fortiguard"
+  },
+  "web_filtering": {
+   "status": "expired",
+   "expires": 1757376000,
+   "type": "fortiguard",
+   "category": "FortiGuard Web Filtering"
+  },
+  "vdom": {
+   "type": "default",
+   "can_upgrade": false,
+   "used": 1,
+   "max": 10
+  }
+ },
+ "vdom": "root",
+ "path": "license",
+ "name": "status",
+ "status": "success",
+ "serial": "FGT60FTK00000000",
+ "version": "v7.6.7",
+ "build": 3700
+}

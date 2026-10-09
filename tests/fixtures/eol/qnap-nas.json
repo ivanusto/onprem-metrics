@@ -1,0 +1,32 @@
+{
+ "schema_version": "1.2.0",
+ "generated_at": "2026-10-08T00:00:00Z",
+ "result": {
+  "name": "qnap-nas",
+  "label": "QNAP NAS",
+  "category": "os",
+  "releases": [
+   {
+    "name": "TS-464",
+    "codename": null,
+    "label": "TS-464",
+    "releaseDate": "2022-01-01",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": false,
+    "eoasFrom": null,
+    "isEol": false,
+    "eolFrom": null,
+    "isEoes": null,
+    "eoesFrom": null,
+    "isMaintained": true,
+    "latest": {
+     "name": "TS-464.x",
+     "date": "2022-01-01",
+     "link": null
+    },
+    "custom": null
+   }
+  ]
+ }
+}

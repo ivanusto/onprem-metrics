@@ -1,0 +1,53 @@
+{
+ "schema_version": "1.2.0",
+ "generated_at": "2026-10-08T00:00:00Z",
+ "result": {
+  "name": "debian",
+  "label": "Debian",
+  "category": "os",
+  "releases": [
+   {
+    "name": "13",
+    "codename": "Trixie",
+    "label": "13",
+    "releaseDate": "2025-08-09",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": false,
+    "eoasFrom": "2028-08-09",
+    "isEol": false,
+    "eolFrom": "2028-08-09",
+    "isEoes": false,
+    "eoesFrom": "2030-06-30",
+    "isMaintained": true,
+    "latest": {
+     "name": "13.x",
+     "date": "2025-08-09",
+     "link": null
+    },
+    "custom": null
+   },
+   {
+    "name": "12",
+    "codename": "Bookworm",
+    "label": "12",
+    "releaseDate": "2023-06-10",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": false,
+    "eoasFrom": "2026-07-11",
+    "isEol": false,
+    "eolFrom": "2026-07-11",
+    "isEoes": false,
+    "eoesFrom": "2028-06-30",
+    "isMaintained": true,
+    "latest": {
+     "name": "12.x",
+     "date": "2023-06-10",
+     "link": null
+    },
+    "custom": null
+   }
+  ]
+ }
+}

@@ -1,0 +1,32 @@
+{
+ "schema_version": "1.2.0",
+ "generated_at": "2026-10-08T00:00:00Z",
+ "result": {
+  "name": "ubuntu",
+  "label": "Ubuntu",
+  "category": "os",
+  "releases": [
+   {
+    "name": "24.04",
+    "codename": "Noble Numbat",
+    "label": "24.04",
+    "releaseDate": "2024-04-25",
+    "isLts": true,
+    "ltsFrom": "2024-04-25",
+    "isEoas": false,
+    "eoasFrom": "2029-05-31",
+    "isEol": false,
+    "eolFrom": "2029-05-31",
+    "isEoes": false,
+    "eoesFrom": "2034-04-25",
+    "isMaintained": true,
+    "latest": {
+     "name": "24.04.x",
+     "date": "2024-04-25",
+     "link": null
+    },
+    "custom": null
+   }
+  ]
+ }
+}

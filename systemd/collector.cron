@@ -5,3 +5,9 @@
 # Day 20: corosync votes, one entry per cluster, nodes tried in order. The key
 # logs in as root (pvecm needs it) and is restricted with command="/usr/bin/pvecm status".
 * * * * * metrics /opt/onprem-metrics/textfile/pve-quorum-textfile.sh lab=root@192.168.2.9,root@192.168.2.5 > /var/lib/node_exporter/textfile/.pve-quorum.tmp && mv /var/lib/node_exporter/textfile/.pve-quorum.tmp /var/lib/node_exporter/textfile/pve-quorum.prom
+# Day 25: asset lifecycle, once a day at 07:35 local. --refresh checks the
+# TSV against endoflife.date (cached a day in /var/lib/onprem-metrics/eol);
+# --fortigate reads the licence expiries from the 60F with a read-only REST
+# token (trusted host = this collector). Drop the --fortigate pair on a site
+# without API access; the TSV rows still produce metrics.
+35 7 * * * metrics /opt/onprem-metrics/textfile/eol-textfile.py --assets /opt/onprem-metrics/eol/assets.tsv --refresh --cache /var/lib/onprem-metrics/eol --fortigate https://192.168.2.99 --token-file /etc/onprem-metrics/fgt.token --insecure --out /var/lib/node_exporter/textfile/eol.prom >> /var/log/onprem-metrics/eol.log 2>&1

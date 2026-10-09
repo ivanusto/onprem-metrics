@@ -1,0 +1,74 @@
+{
+ "schema_version": "1.2.0",
+ "generated_at": "2026-10-08T00:00:00Z",
+ "result": {
+  "name": "fortios",
+  "label": "FortiOS",
+  "category": "os",
+  "releases": [
+   {
+    "name": "7.6",
+    "codename": null,
+    "label": "7.6",
+    "releaseDate": "2024-07-25",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": false,
+    "eoasFrom": "2028-07-25",
+    "isEol": false,
+    "eolFrom": "2030-01-25",
+    "isEoes": null,
+    "eoesFrom": null,
+    "isMaintained": true,
+    "latest": {
+     "name": "7.6.x",
+     "date": "2024-07-25",
+     "link": null
+    },
+    "custom": null
+   },
+   {
+    "name": "7.4",
+    "codename": null,
+    "label": "7.4",
+    "releaseDate": "2023-05-11",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": false,
+    "eoasFrom": "2027-05-11",
+    "isEol": false,
+    "eolFrom": "2028-11-11",
+    "isEoes": null,
+    "eoesFrom": null,
+    "isMaintained": true,
+    "latest": {
+     "name": "7.4.x",
+     "date": "2023-05-11",
+     "link": null
+    },
+    "custom": null
+   },
+   {
+    "name": "7.2",
+    "codename": null,
+    "label": "7.2",
+    "releaseDate": "2022-03-31",
+    "isLts": false,
+    "ltsFrom": null,
+    "isEoas": false,
+    "eoasFrom": "2025-03-31",
+    "isEol": false,
+    "eolFrom": "2026-09-30",
+    "isEoes": null,
+    "eoesFrom": null,
+    "isMaintained": true,
+    "latest": {
+     "name": "7.2.x",
+     "date": "2022-03-31",
+     "link": null
+    },
+    "custom": null
+   }
+  ]
+ }
+}

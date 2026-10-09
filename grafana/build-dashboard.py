@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build grafana/dashboards/onprem-overview.json.
 
-One dashboard, six rows, each row answers one question an operator asks
+One dashboard, seven rows, each row answers one question an operator asks
 when paged at 03:00. The JSON is generated so thresholds stay in one place
 and match prometheus/rules/thresholds.yml: edit this file, run it, commit
 both. Grafana loads the JSON through provisioning with allowUiUpdates=false.
@@ -20,6 +20,7 @@ MEM_WARN, MEM_CRIT = 6 * 1024 ** 3, 3 * 1024 ** 3
 POOL_WARN, POOL_CRIT = 80, 90
 DISK_TEMP_WARN = 50
 DRILL_STALE_DAYS, CLOUD_DRILL_STALE_DAYS = 30, 90
+EOL_WARN_DAYS, EOL_CRIT_DAYS = 90, 30   # prometheus/rules/eol.yml (Day 25)
 RTO_TARGET = 900
 
 # Labels no table needs to show
@@ -349,7 +350,35 @@ def build():
                 desc="每次演練寫入 drills.jsonl 後 15 分鐘內更新。走勢往上就是還原在變慢"))
     y += 7
 
-    # ---- Row 5: the pipeline itself -------------------------------------
+    # ---- Row 5: asset lifecycle (Day 25) ----------------------------------
+    P.append(row("資產生命週期（Day 25）", y)); y += 1
+    P.append(stat("沒有日期的資產", 0, y, 4, 4, "count(asset_eol_unknown == 1) or vector(0)", "",
+                  thresholds=steps((None, "green"), (1, "orange")),
+                  desc="eol/assets.tsv 裡日期是 ? 的列。廠商沒公布或還沒查。每一列都是一個 AssetEolUnknown",
+                  mode="value"))
+    P.append(stat("已過期", 4, y, 4, 4, "count(asset_eol_timestamp_seconds <= time()) or vector(0)", "",
+                  thresholds=steps((None, "green"), (1, "red")),
+                  desc="支援已結束或授權已到期而清單還掛著的。AssetEolPassed 會一直響到列被改掉", mode="value"))
+    P.append(stat("90 天內", 8, y, 4, 4, f"count(0 < (asset_eol_timestamp_seconds - time()) / 86400 <= {EOL_WARN_DAYS}) or vector(0)", "",
+                  thresholds=steps((None, "green"), (1, "orange")),
+                  desc=f"{EOL_WARN_DAYS} 天是一個採購週期：報價、變更單、維護窗", mode="value"))
+    P.append(stat("endoflife.date 不一致", 12, y, 4, 4, "count(asset_eol_source_mismatch == 1) or vector(0)", "",
+                  thresholds=steps((None, "green"), (1, "orange")),
+                  desc="TSV 的日期與 endoflife.date 不同。廠商改了日期，或 TSV 打錯", mode="value"))
+    P.append(stat("清單更新於", 16, y, 8, 4, "(time() - eol_textfile_last_run_timestamp) / 86400", "",
+                  unit="d", decimals=1, thresholds=steps((None, "green"), (2, "orange")),
+                  desc="eol-textfile.py 每天一次。兩天沒跑 EolTextfileStale", mode="value"))
+    y += 4
+    P.append(table("距生命週期終點（天）", 0, y, 24, 11,
+                   [target("(asset_eol_timestamp_seconds - time()) / 86400", instant=True, fmt="table")],
+                   desc=f"每一列一個（資產、元件、里程碑）。負數是已經過了。{EOL_WARN_DAYS} 天轉橘，{EOL_CRIT_DAYS} 天轉紅。basis 是 estimate 的列，日期是推算的（例如以底層 Debian 的期限當 Proxmox VE 的期限），不是廠商公告",
+                   rename={"asset": "資產", "component": "元件", "kind": "種類", "version": "版本", "milestone": "里程碑", "basis": "依據", "Value": "剩餘天數"},
+                   order=("資產", "元件", "種類", "版本", "里程碑", "依據", "剩餘天數"), sort="剩餘天數",
+                   overrides=[col("資產", width=110), col("種類", width=80), col("版本", width=80), col("依據", width=80),
+                              cell("剩餘天數", steps((None, "red"), (EOL_CRIT_DAYS, "orange"), (EOL_WARN_DAYS, "green")), "d", width=110)]))
+    y += 11
+
+    # ---- Row 6: the pipeline itself -------------------------------------
     P.append(row("管線", y)); y += 1
     P.append(table("抓取目標", 0, y, 12, 8,
                    [target("up", instant=True, fmt="table")],
