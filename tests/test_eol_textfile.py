@@ -82,13 +82,14 @@ class Textfile(unittest.TestCase):
         # a ? row is an unknown, never a timestamp
         self.assertIn('asset_eol_unknown{asset="fgt-edge",component="FortiGate 60F",kind="hardware",version="60F",milestone="end_of_order",basis="unknown"} 1', text)
         self.assertNotIn('asset_eol_timestamp_seconds{asset="fgt-edge",component="FortiGate 60F"', text)
-        # the TSV agrees with the fixture copy of endoflife.date
-        self.assertIn('asset_eol_source_mismatch{asset="qdevice",component="Debian",kind="os",version="12",milestone="security_support_end",basis="vendor"} 0', text)
+        # the TSV agrees with the fixture copy of endoflife.date (the qdevice rows
+        # follow the live TSV: 13 since CR-2026-0001 on 2026-10-10)
+        self.assertIn('asset_eol_source_mismatch{asset="qdevice",component="Debian",kind="os",version="13",milestone="security_support_end",basis="vendor"} 0', text)
         for line in text.splitlines():
             if line.startswith("asset_eol_source_mismatch{"):
                 self.assertTrue(line.endswith(" 0"), line)
         # Debian's fields: security support is eoasFrom, LTS is eolFrom (both 0 above)
-        self.assertIn('asset_eol_source_mismatch{asset="qdevice",component="Debian",kind="os",version="12",milestone="lts_end",basis="vendor"} 0', text)
+        self.assertIn('asset_eol_source_mismatch{asset="qdevice",component="Debian",kind="os",version="13",milestone="lts_end",basis="vendor"} 0', text)
         # Proxmox VE 9 has no date on endoflife.date yet: no comparison, no false 1
         self.assertNotIn('asset_eol_source_mismatch{asset="pve1",component="Proxmox VE"', text)
         # licences walked out of the 60F's real answer (2026-10-09, serial and

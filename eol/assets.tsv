@@ -34,8 +34,8 @@ pve1	Proxmox VE	os	9.2	end_of_support	2028-08-09	estimate	proxmox-ve/9	https://e
 pve1	Debian (PVE base)	os	13	security_support_end	2028-08-09	vendor	debian/13	https://endoflife.date/debian	13.7 installed; Debian LTS to 2030-06-30
 pve2	Proxmox VE	os	9.2	end_of_support	2028-08-09	estimate	proxmox-ve/9	https://endoflife.date/proxmox-ve	as pve1
 pve2	Debian (PVE base)	os	13	security_support_end	2028-08-09	vendor	debian/13	https://endoflife.date/debian	as pve1
-qdevice	Debian	os	12	security_support_end	2026-07-11	vendor	debian/12	https://endoflife.date/debian	Day 15's qnetd VM; on 2026-10-09 its SSH banner reads OpenSSH_9.2p1 Debian-2+deb12u10, still bookworm. Regular security support ended, LTS until 2028-06-30 (the upgrade to 13 is a change for Day 26)
-qdevice	Debian	os	12	lts_end	2028-06-30	vendor	debian/12	https://endoflife.date/debian	Debian LTS
+qdevice	Debian	os	13	security_support_end	2028-08-09	vendor	debian/13	https://endoflife.date/debian	Day 15's qnetd VM; upgraded 12.15 to 13.7 on 2026-10-10 by CR-2026-0001 (onprem-changes), SSH banner now OpenSSH_10.0p2 Debian-7+deb13u4
+qdevice	Debian	os	13	lts_end	2030-06-30	vendor	debian/13	https://endoflife.date/debian	Debian LTS
 collector	Ubuntu	os	24.04	security_support_end	2029-05-31	vendor	ubuntu/24.04	https://endoflife.date/ubuntu	the collector VM (24.04.5 LTS); ESM to 2034-04-25 needs a Pro subscription
 nas-primary	QuTS hero	os	6.0.2	end_of_support	?	unknown	-	https://www.qnap.com/en/product/eol-product	QNAP publishes support status per model, not per QuTS hero release (待查)
 nas-secondary	QuTS hero	os	6.0.2	end_of_support	?	unknown	-	https://www.qnap.com/en/product/eol-product	as nas-primary
