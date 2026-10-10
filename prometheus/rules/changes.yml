@@ -1,0 +1,33 @@
+# Day 26: copy of onprem-changes prometheus/changes.yml. This is the copy
+# Prometheus loads; change both together.
+groups:
+  - name: changes
+    rules:
+      - alert: ChangesTextfileStale
+        expr: time() - changes_textfile_last_run_timestamp > 3600
+        for: 10m
+        labels: {severity: warning}
+        annotations: {summary: "changes-textfile has not run for an hour, change metrics are stale"}
+      # A record whose window has closed but whose status still says the
+      # work is pending or under way: either the record was not updated
+      # (finish it: begin, end, result) or the change ran over its window,
+      # which is exactly what a change window is there to make visible.
+      - alert: ChangeWindowOverrun
+        expr: |
+          (time() - change_window_end_timestamp{status=~"scheduled|in_progress"}) / 60 > 60
+        labels: {severity: warning}
+        annotations: {summary: "{{ $labels.id }}: window closed {{ $value | printf \"%.0f\" }} minutes ago and the record is still {{ $labels.status }}"}
+      # A change is in progress right now. info, so it lands in the daily
+      # digest next to whatever fired during the window; the record's own
+      # silence handles the alerts it expected.
+      - alert: ChangeInProgress
+        expr: change_record{status="in_progress"} == 1
+        labels: {severity: info}
+        annotations: {summary: "{{ $labels.id }} is in progress ({{ $labels.implementer }}, approved by {{ $labels.approver }})"}
+      # Scheduled with a window that starts within a day: a heads-up in the
+      # digest, so the window is not a surprise to whoever is on call.
+      - alert: ChangeStartsSoon
+        expr: |
+          0 < (change_window_start_timestamp{status="scheduled"} - time()) / 3600 <= 24
+        labels: {severity: info}
+        annotations: {summary: "{{ $labels.id }} starts in {{ $value | printf \"%.0f\" }} hours"}

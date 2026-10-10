@@ -65,6 +65,9 @@ inhibit_rules:
   # new "within 90 days" would come from stale data (Day 25).
   - source_matchers: [alertname="EolTextfileStale"]
     target_matchers: [alertname=~"Asset(Eol|Licence).*"]
+  # changes-textfile stopped: windows and statuses are old (Day 26).
+  - source_matchers: [alertname="ChangesTextfileStale"]
+    target_matchers: [alertname=~"Change(WindowOverrun|InProgress|StartsSoon)"]
   - source_matchers: [alertname="NasUnreachable"]
     target_matchers: [alertname=~"Nas(Pool|Snapshot).*"]
     equal: [nas]

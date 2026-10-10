@@ -1,0 +1,55 @@
+# promtool test rules tests/rules_changes_test.yml  (clock starts at 0)
+rule_files:
+  - ../prometheus/rules/changes.yml
+
+evaluation_interval: 1m
+
+tests:
+  # a window from 2h to 3h; the record stays "scheduled" and is never marked done
+  - interval: 1m
+    input_series:
+      - series: 'change_window_start_timestamp{id="CR-2026-0001",status="scheduled"}'
+        values: "7200x400"
+      - series: 'change_window_end_timestamp{id="CR-2026-0001",status="scheduled"}'
+        values: "10800x400"
+      - series: 'change_record{id="CR-2026-0001",status="scheduled",type="standard",risk="medium",implementer="a",approver="b"}'
+        values: "1x400"
+    alert_rule_test:
+      - eval_time: 1h
+        alertname: ChangeStartsSoon
+        exp_alerts:
+          - exp_labels: {severity: info, id: CR-2026-0001, status: scheduled}
+            exp_annotations: {summary: "CR-2026-0001 starts in 1 hours"}
+      - eval_time: 2h30m           # inside the window: nothing yet
+        alertname: ChangeWindowOverrun
+        exp_alerts: []
+      - eval_time: 3h59m           # 59 minutes after the window closed: still nothing
+        alertname: ChangeWindowOverrun
+        exp_alerts: []
+      - eval_time: 4h1m            # 61 minutes after: warning
+        alertname: ChangeWindowOverrun
+        exp_alerts:
+          - exp_labels: {severity: warning, id: CR-2026-0001, status: scheduled}
+            exp_annotations: {summary: "CR-2026-0001: window closed 61 minutes ago and the record is still scheduled"}
+
+  # a record marked in_progress is an info the whole time
+  - interval: 1m
+    input_series:
+      - series: 'change_record{id="CR-2026-0002",status="in_progress",type="emergency",risk="high",implementer="a",approver="b"}'
+        values: "1x10"
+      - series: 'changes_textfile_last_run_timestamp'
+        values: "0x200"
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: ChangeInProgress
+        exp_alerts:
+          - exp_labels: {severity: info, id: CR-2026-0002, status: in_progress, type: emergency, risk: high, implementer: a, approver: b}
+            exp_annotations: {summary: "CR-2026-0002 is in progress (a, approved by b)"}
+      - eval_time: 69m
+        alertname: ChangesTextfileStale
+        exp_alerts: []
+      - eval_time: 71m
+        alertname: ChangesTextfileStale
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations: {summary: "changes-textfile has not run for an hour, change metrics are stale"}

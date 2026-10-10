@@ -20,8 +20,8 @@ jobs:
           tar xzf p.tgz && sudo install -m 0755 prometheus-3.5.0.linux-amd64/promtool /usr/local/bin/promtool
       - run: shellcheck textfile/nas-textfile.sh textfile/pve-quorum-textfile.sh verify.sh install-node.sh tests/fake-nas.sh
       - run: promtool check config prometheus/prometheus.yml
-      - run: promtool check rules prometheus/rules/staleness.yml prometheus/rules/thresholds.yml prometheus/rules/firewall.yml prometheus/rules/aup.yml prometheus/rules/eol.yml
-      - run: cd tests && promtool test rules rules_test.yml rules_aup_test.yml rules_eol_test.yml
+      - run: promtool check rules prometheus/rules/staleness.yml prometheus/rules/thresholds.yml prometheus/rules/firewall.yml prometheus/rules/aup.yml prometheus/rules/eol.yml prometheus/rules/changes.yml
+      - run: cd tests && promtool test rules rules_test.yml rules_aup_test.yml rules_eol_test.yml rules_changes_test.yml
       - name: amtool check-config
         run: |
           curl -fsSL -o a.tgz https://github.com/prometheus/alertmanager/releases/download/v0.28.1/alertmanager-0.28.1.linux-amd64.tar.gz
