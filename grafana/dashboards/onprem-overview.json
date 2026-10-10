@@ -29,6 +29,23 @@
     "step": "60s",
     "titleFormat": "{{alertname}}",
     "textFormat": "{{summary}}"
+   },
+   {
+    "name": "變更單",
+    "datasource": {
+     "type": "grafana",
+     "uid": "-- Grafana --"
+    },
+    "enable": true,
+    "iconColor": "rgba(150, 150, 150, 0.6)",
+    "target": {
+     "type": "tags",
+     "tags": [
+      "change"
+     ],
+     "matchAny": false,
+     "limit": 100
+    }
    }
   ]
  },
@@ -2035,6 +2052,68 @@
   },
   {
    "id": 30,
+   "type": "timeseries",
+   "title": "票數",
+   "description": "在場票數與 QDevice 票隨時間。灰色區間是變更單的窗（change-mark.sh begin 到 end）",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 62,
+    "w": 24,
+    "h": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "pve_quorum_total_votes",
+     "refId": "A",
+     "legendFormat": "{{cluster}} 在場"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "pve_quorum_qdevice_votes",
+     "refId": "B",
+     "legendFormat": "{{cluster}} QDevice"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "color": {
+      "mode": "palette-classic"
+     },
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": 60000
+     },
+     "min": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "showLegend": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "id": 31,
    "type": "table",
    "title": "HA 資源",
    "description": "每個 HA 管理的客體與節點目前的狀態。error、fence、recovery 會響",
@@ -2044,7 +2123,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 62,
+    "y": 68,
     "w": 8,
     "h": 8
    },
@@ -2175,7 +2254,7 @@
    ]
   },
   {
-   "id": 31,
+   "id": 32,
    "type": "table",
    "title": "儲存",
    "description": "各節點看到的資料存放區。NFS 在 NAS 重開時會變不可用，約 8 分鐘（Day 15 演練 1）",
@@ -2185,7 +2264,7 @@
    },
    "gridPos": {
     "x": 8,
-    "y": 62,
+    "y": 68,
     "w": 8,
     "h": 8
    },
@@ -2289,7 +2368,7 @@
    ]
   },
   {
-   "id": 32,
+   "id": 33,
    "type": "timeseries",
    "title": "執行中的 VM 數",
    "description": "pve-exporter 兩個節點都回整座叢集，先去掉 instance 再 count，否則每台客體算兩次",
@@ -2299,7 +2378,7 @@
    },
    "gridPos": {
     "x": 16,
-    "y": 62,
+    "y": 68,
     "w": 8,
     "h": 8
    },
@@ -2351,7 +2430,7 @@
    }
   },
   {
-   "id": 33,
+   "id": 34,
    "type": "timeseries",
    "title": "節點 CPU",
    "description": "",
@@ -2361,7 +2440,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 70,
+    "y": 76,
     "w": 8,
     "h": 6
    },
@@ -2406,7 +2485,7 @@
    }
   },
   {
-   "id": 34,
+   "id": 35,
    "type": "timeseries",
    "title": "節點記憶體",
    "description": "",
@@ -2416,7 +2495,7 @@
    },
    "gridPos": {
     "x": 8,
-    "y": 70,
+    "y": 76,
     "w": 8,
     "h": 6
    },
@@ -2461,7 +2540,7 @@
    }
   },
   {
-   "id": 35,
+   "id": 36,
    "type": "timeseries",
    "title": "客體磁碟 I/O",
    "description": "",
@@ -2471,7 +2550,7 @@
    },
    "gridPos": {
     "x": 16,
-    "y": 70,
+    "y": 76,
     "w": 8,
     "h": 6
    },
@@ -2523,20 +2602,20 @@
    }
   },
   {
-   "id": 36,
+   "id": 37,
    "type": "row",
    "title": "還原演練（Day 16 至 18）",
    "collapsed": false,
    "gridPos": {
     "x": 0,
-    "y": 76,
+    "y": 82,
     "w": 24,
     "h": 1
    },
    "panels": []
   },
   {
-   "id": 37,
+   "id": 38,
    "type": "bargauge",
    "title": "距上次成功（天）",
    "description": "每個演練標籤一條。pve 與 nas 的政策是每月，30 天轉橘。cloud 是每季，90 天轉紅。這一排全綠才叫備份存在",
@@ -2546,7 +2625,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 77,
+    "y": 83,
     "w": 10,
     "h": 10
    },
@@ -2611,7 +2690,7 @@
    }
   },
   {
-   "id": 38,
+   "id": 39,
    "type": "table",
    "title": "最近一次演練",
    "description": "結果、RTO、RPO、速率。RTO 目標 900 s 只對 pve 演練（Day 16 量到 569 s），nas 與 cloud 的標籤含上傳與整個資料夾回復，量級不同",
@@ -2621,7 +2700,7 @@
    },
    "gridPos": {
     "x": 10,
-    "y": 77,
+    "y": 83,
     "w": 14,
     "h": 10
    },
@@ -2865,7 +2944,7 @@
    ]
   },
   {
-   "id": 39,
+   "id": 40,
    "type": "timeseries",
    "title": "RTO 走勢",
    "description": "每次演練寫入 drills.jsonl 後 15 分鐘內更新。走勢往上就是還原在變慢",
@@ -2875,7 +2954,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 87,
+    "y": 93,
     "w": 24,
     "h": 7
    },
@@ -2935,20 +3014,20 @@
    }
   },
   {
-   "id": 40,
+   "id": 41,
    "type": "row",
    "title": "資產生命週期（Day 25）",
    "collapsed": false,
    "gridPos": {
     "x": 0,
-    "y": 94,
+    "y": 100,
     "w": 24,
     "h": 1
    },
    "panels": []
   },
   {
-   "id": 41,
+   "id": 42,
    "type": "stat",
    "title": "沒有日期的資產",
    "description": "eol/assets.tsv 裡日期是 ? 的列。廠商沒公布或還沒查。每一列都是一個 AssetEolUnknown",
@@ -2958,7 +3037,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 95,
+    "y": 101,
     "w": 4,
     "h": 4
    },
@@ -3012,7 +3091,7 @@
    }
   },
   {
-   "id": 42,
+   "id": 43,
    "type": "stat",
    "title": "已過期",
    "description": "支援已結束而清單還掛著的。AssetEolPassed 會一直響到列被改掉。授權另計",
@@ -3022,7 +3101,7 @@
    },
    "gridPos": {
     "x": 4,
-    "y": 95,
+    "y": 101,
     "w": 4,
     "h": 4
    },
@@ -3076,7 +3155,7 @@
    }
   },
   {
-   "id": 43,
+   "id": 44,
    "type": "stat",
    "title": "過期授權",
    "description": "FortiGate 自己回報已到期的授權項目數。同一張合約一起到期，所以告警是每台一條 AssetLicenceExpired",
@@ -3086,7 +3165,7 @@
    },
    "gridPos": {
     "x": 8,
-    "y": 95,
+    "y": 101,
     "w": 4,
     "h": 4
    },
@@ -3140,7 +3219,7 @@
    }
   },
   {
-   "id": 44,
+   "id": 45,
    "type": "stat",
    "title": "90 天內",
    "description": "90 天是一個採購週期：報價、變更單、維護窗。含授權",
@@ -3150,7 +3229,7 @@
    },
    "gridPos": {
     "x": 12,
-    "y": 95,
+    "y": 101,
     "w": 4,
     "h": 4
    },
@@ -3204,7 +3283,7 @@
    }
   },
   {
-   "id": 45,
+   "id": 46,
    "type": "stat",
    "title": "endoflife.date 不一致",
    "description": "TSV 的日期與 endoflife.date 不同。廠商改了日期，或 TSV 打錯",
@@ -3214,7 +3293,7 @@
    },
    "gridPos": {
     "x": 16,
-    "y": 95,
+    "y": 101,
     "w": 4,
     "h": 4
    },
@@ -3268,7 +3347,7 @@
    }
   },
   {
-   "id": 46,
+   "id": 47,
    "type": "stat",
    "title": "清單更新於",
    "description": "eol-textfile.py 每天一次。兩天沒跑 EolTextfileStale",
@@ -3278,7 +3357,7 @@
    },
    "gridPos": {
     "x": 20,
-    "y": 95,
+    "y": 101,
     "w": 4,
     "h": 4
    },
@@ -3334,7 +3413,7 @@
    }
   },
   {
-   "id": 47,
+   "id": 48,
    "type": "table",
    "title": "距生命週期終點（天）",
    "description": "每一列一個（資產、元件、里程碑）。負數是已經過了。90 天轉橘，30 天轉紅。basis 是 estimate 的列，日期是推算的（例如以底層 Debian 的期限當 Proxmox VE 的期限），不是廠商公告",
@@ -3344,7 +3423,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 99,
+    "y": 105,
     "w": 16,
     "h": 11
    },
@@ -3524,7 +3603,7 @@
    ]
   },
   {
-   "id": 48,
+   "id": 49,
    "type": "table",
    "title": "授權到期（天）",
    "description": "eol-textfile.py --fortigate 從 /api/v2/monitor/license/status 讀的每一項。負數是已到期",
@@ -3534,7 +3613,7 @@
    },
    "gridPos": {
     "x": 16,
-    "y": 99,
+    "y": 105,
     "w": 8,
     "h": 11
    },
@@ -3674,20 +3753,20 @@
    ]
   },
   {
-   "id": 49,
+   "id": 50,
    "type": "row",
    "title": "管線",
    "collapsed": false,
    "gridPos": {
     "x": 0,
-    "y": 110,
+    "y": 116,
     "w": 24,
     "h": 1
    },
    "panels": []
   },
   {
-   "id": 50,
+   "id": 51,
    "type": "table",
    "title": "抓取目標",
    "description": "每個抓取目標最後一次抓取是否成功。DOWN 五分鐘 TargetDown 會響",
@@ -3697,7 +3776,7 @@
    },
    "gridPos": {
     "x": 0,
-    "y": 111,
+    "y": 117,
     "w": 12,
     "h": 8
    },
@@ -3804,17 +3883,17 @@
    ]
   },
   {
-   "id": 51,
+   "id": 52,
    "type": "bargauge",
    "title": "textfile 距上次執行",
-   "description": "Day 19 第四節。舊的 .prom 檔會讓數字看起來正常，這一格變橘就是靜默失效。drills 每 15 分鐘一次，其他每分鐘或更快",
+   "description": "Day 19 第四節。舊的 .prom 檔會讓數字看起來正常，這一格變橘就是靜默失效。drills 與 changes 每 15 分鐘一次，其他每分鐘或更快",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
    },
    "gridPos": {
     "x": 12,
-    "y": 111,
+    "y": 117,
     "w": 12,
     "h": 8
    },
@@ -3862,7 +3941,7 @@
      {
       "matcher": {
        "id": "byRegexp",
-       "options": "drills.*"
+       "options": "(drills|changes).*"
       },
       "properties": [
        {

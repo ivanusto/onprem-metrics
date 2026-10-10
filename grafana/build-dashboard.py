@@ -301,6 +301,14 @@ def build():
     P.append(stat("節點", 12, y, 12, 5, pve('pve_up{id=~"node/.*"}'), "{{id}}",
                   thresholds=steps((None, "red"), (1, "green")), decimals=0))
     y += 5
+    # The stats above say "now"; this says "when". Change windows (Day 26)
+    # are drawn on it as shaded spans, so a QDevice dip inside a window
+    # reads as planned and one outside it does not.
+    P.append(ts("票數", 0, y, 24, 6,
+                [target("pve_quorum_total_votes", "{{cluster}} 在場"),
+                 target("pve_quorum_qdevice_votes", "{{cluster}} QDevice")],
+                minv=0, desc="在場票數與 QDevice 票隨時間。灰色區間是變更單的窗（change-mark.sh begin 到 end）"))
+    y += 6
     P.append(table("HA 資源", 0, y, 8, 8,
                    [target(pve("pve_ha_state == 1"), instant=True, fmt="table")],
                    desc="每個 HA 管理的客體與節點目前的狀態。error、fence、recovery 會響",
@@ -409,9 +417,9 @@ def build():
                   'time() - label_replace({__name__=~".+_textfile_last_run_timestamp"}, "textfile", "$1", "__name__", "(.+)_textfile_last_run_timestamp")',
                   "{{textfile}} {{node}}{{nas}}", unit="s", decimals=0, maxv=1200,
                   thresholds=steps((None, "green"), (120, "orange"), (600, "red")),
-                  overrides=[{"matcher": {"id": "byRegexp", "options": "drills.*"},
+                  overrides=[{"matcher": {"id": "byRegexp", "options": "(drills|changes).*"},
                               "properties": [{"id": "thresholds", "value": steps((None, "green"), (1800, "orange"), (7200, "red"))}]}],
-                  desc="Day 19 第四節。舊的 .prom 檔會讓數字看起來正常，這一格變橘就是靜默失效。drills 每 15 分鐘一次，其他每分鐘或更快"))
+                  desc="Day 19 第四節。舊的 .prom 檔會讓數字看起來正常，這一格變橘就是靜默失效。drills 與 changes 每 15 分鐘一次，其他每分鐘或更快"))
     y += 8
 
     return {
@@ -424,7 +432,12 @@ def build():
         "annotations": {"list": [
             {"name": "critical 告警", "datasource": DS, "enable": False, "iconColor": "red",
              "expr": 'ALERTS{alertstate="firing",severity="critical"}', "step": "60s",
-             "titleFormat": "{{alertname}}", "textFormat": "{{summary}}"}]},
+             "titleFormat": "{{alertname}}", "textFormat": "{{summary}}"},
+            # Day 26: change-mark.sh posts org annotations tagged "change";
+            # without a tag query no panel would show them.
+            {"name": "變更單", "datasource": {"type": "grafana", "uid": "-- Grafana --"}, "enable": True,
+             "iconColor": "rgba(150, 150, 150, 0.6)",
+             "target": {"type": "tags", "tags": ["change"], "matchAny": False, "limit": 100}}]},
         "templating": {"list": []},
         "panels": P,
     }
