@@ -1,0 +1,52 @@
+# promtool test rules tests/rules_audit_test.yml
+rule_files:
+  - ../prometheus/rules/audit.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'audit_unattributed{source="fortigate-config"}'
+        values: "0 0 1 1 0"
+      - series: 'audit_unattributed{source="sudo"}'
+        values: "0 2 2 0 0"
+      - series: 'audit_changes_without_marks'
+        values: "0 0 0 1 1"
+      - series: 'audit_report_last_run_timestamp'
+        values: "0x120"
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: AuditUnattributedFortigateChange
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: AuditUnattributedFortigateChange
+        exp_alerts:
+          - exp_labels: {severity: warning, source: fortigate-config}
+            exp_annotations: {summary: "1 FortiGate configuration change(s) in the last hour outside any change window; open or backfill a record (CR, type emergency)"}
+      - eval_time: 1m
+        alertname: AuditUnattributedActions
+        exp_alerts:
+          - exp_labels: {severity: info}
+            exp_annotations: {summary: "2 administrative action(s) in the last hour outside any change window, see the audit report"}
+      - eval_time: 2m
+        alertname: AuditUnattributedActions
+        exp_alerts:
+          - exp_labels: {severity: info}
+            exp_annotations: {summary: "3 administrative action(s) in the last hour outside any change window, see the audit report"}
+      - eval_time: 4m
+        alertname: AuditUnattributedActions
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: AuditChangeWithoutMarks
+        exp_alerts:
+          - exp_labels: {severity: info}
+            exp_annotations: {summary: "1 done change record(s) with no change-mark begin line in their window"}
+      - eval_time: 39m
+        alertname: AuditReportStale
+        exp_alerts: []
+      - eval_time: 41m
+        alertname: AuditReportStale
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations: {summary: "audit-report has not run for 30 minutes, audit metrics are stale"}

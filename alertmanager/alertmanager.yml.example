@@ -68,6 +68,9 @@ inhibit_rules:
   # changes-textfile stopped: windows and statuses are old (Day 26).
   - source_matchers: [alertname="ChangesTextfileStale"]
     target_matchers: [alertname=~"Change(WindowOverrun|InProgress|StartsSoon)"]
+  # audit-report stopped (Day 27).
+  - source_matchers: [alertname="AuditReportStale"]
+    target_matchers: [alertname=~"Audit(Unattributed.*|ChangeWithoutMarks)"]
   - source_matchers: [alertname="NasUnreachable"]
     target_matchers: [alertname=~"Nas(Pool|Snapshot).*"]
     equal: [nas]
