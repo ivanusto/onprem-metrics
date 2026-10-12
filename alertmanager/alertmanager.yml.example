@@ -67,7 +67,7 @@ inhibit_rules:
     target_matchers: [alertname=~"Asset(Eol|Licence).*"]
   # changes-textfile stopped: windows and statuses are old (Day 26).
   - source_matchers: [alertname="ChangesTextfileStale"]
-    target_matchers: [alertname=~"Change(WindowOverrun|InProgress|StartsSoon)"]
+    target_matchers: [alertname=~"Change(WindowOverrun|InProgress|StartsSoon|RollbackUndrilled|RollbackDrillStale)"]
   # audit-report stopped (Day 27).
   - source_matchers: [alertname="AuditReportStale"]
     target_matchers: [alertname=~"Audit(Unattributed.*|ChangeWithoutMarks)"]

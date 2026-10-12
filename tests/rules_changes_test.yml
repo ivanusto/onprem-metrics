@@ -53,3 +53,53 @@ tests:
         exp_alerts:
           - exp_labels: {severity: warning}
             exp_annotations: {summary: "changes-textfile has not run for an hour, change metrics are stale"}
+
+  # Day 28: two done high-risk records, one of them drilled; a drilled
+  # medium record never shows; a drill older than 90 days is stale, and a
+  # rolled_back record's old drill is not
+  - interval: 1m
+    input_series:
+      - series: 'change_record{id="CR-2026-0004",status="done",type="standard",risk="high",implementer="a",approver="b"}'
+        values: "1x10"
+      - series: 'change_record{id="CR-2026-0005",status="done",type="standard",risk="high",implementer="a",approver="b"}'
+        values: "1x10"
+      - series: 'change_record{id="CR-2026-0001",status="done",type="standard",risk="medium",implementer="a",approver="b"}'
+        values: "1x10"
+      - series: 'change_record{id="CR-2026-0009",status="rolled_back",type="standard",risk="high",implementer="a",approver="b"}'
+        values: "1x10"
+      - series: 'change_rollback_last_drill_timestamp{id="CR-2026-0005"}'
+        values: "0x10"                        # drilled at t=0
+      - series: 'change_rollback_last_drill_timestamp{id="CR-2026-0001"}'
+        values: "0x10"
+      - series: 'change_rollback_last_drill_timestamp{id="CR-2026-0009"}'
+        values: "0x10"
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: ChangeRollbackUndrilled
+        exp_alerts:
+          - exp_labels: {severity: info, id: CR-2026-0004, status: done, type: standard, risk: high, implementer: a, approver: b}
+            exp_annotations: {summary: "CR-2026-0004 is done at risk high and its rollback has never been drilled"}
+      - eval_time: 5m
+        alertname: ChangeRollbackDrillStale
+        exp_alerts: []
+
+  # the same drills seen 91 days later: stale for the done records only
+  - interval: 1d
+    input_series:
+      - series: 'change_record{id="CR-2026-0005",status="done",type="standard",risk="high",implementer="a",approver="b"}'
+        values: "1x100"
+      - series: 'change_record{id="CR-2026-0009",status="rolled_back",type="standard",risk="high",implementer="a",approver="b"}'
+        values: "1x100"
+      - series: 'change_rollback_last_drill_timestamp{id="CR-2026-0005"}'
+        values: "0x100"
+      - series: 'change_rollback_last_drill_timestamp{id="CR-2026-0009"}'
+        values: "0x100"
+    alert_rule_test:
+      - eval_time: 89d
+        alertname: ChangeRollbackDrillStale
+        exp_alerts: []
+      - eval_time: 91d
+        alertname: ChangeRollbackDrillStale
+        exp_alerts:
+          - exp_labels: {severity: info, id: CR-2026-0005}
+            exp_annotations: {summary: "CR-2026-0005: rollback last drilled 91d 0h 0m 0s ago, policy is quarterly"}

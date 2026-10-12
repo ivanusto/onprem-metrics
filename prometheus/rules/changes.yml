@@ -31,3 +31,24 @@ groups:
           0 < (change_window_start_timestamp{status="scheduled"} - time()) / 3600 <= 24
         labels: {severity: info}
         annotations: {summary: "{{ $labels.id }} starts in {{ $value | printf \"%.0f\" }} hours"}
+      # Day 28: rollback drills. changes-textfile.py reads drills/drills.jsonl
+      # (what drills/drill.sh appends) and writes, per record whose rollback
+      # a drill ran, the last drill's time and result. A done high-risk
+      # record with no drill on file means its rollback section has only
+      # ever been read; info, so it sits in the digest until a drill record
+      # takes it. Low and medium stay out on purpose: the list has to be
+      # short enough that somebody drills it.
+      - alert: ChangeRollbackUndrilled
+        expr: |
+          change_record{status="done",risk="high"} unless on(id) change_rollback_last_drill_timestamp
+        labels: {severity: info}
+        annotations: {summary: "{{ $labels.id }} is done at risk high and its rollback has never been drilled"}
+      # Drilled once is not drilled: the snapshot tool, the compose file or
+      # the API behind a rollback section changes. Quarterly, like Day 18's
+      # cloud drills; only for records that are still done (a rolled_back
+      # or cancelled record has nothing left to roll back).
+      - alert: ChangeRollbackDrillStale
+        expr: |
+          (time() - change_rollback_last_drill_timestamp and on(id) change_record{status="done"}) > 90 * 86400
+        labels: {severity: info}
+        annotations: {summary: "{{ $labels.id }}: rollback last drilled {{ $value | humanizeDuration }} ago, policy is quarterly"}
