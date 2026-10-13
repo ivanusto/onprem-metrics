@@ -71,6 +71,9 @@ inhibit_rules:
   # audit-report stopped (Day 27).
   - source_matchers: [alertname="AuditReportStale"]
     target_matchers: [alertname=~"Audit(Unattributed.*|ChangeWithoutMarks)"]
+  # gatectl textfile stopped (Day 29): the agent gate numbers are old.
+  - source_matchers: [alertname="AgentGateTextfileStale"]
+    target_matchers: [alertname=~"AgentGate(ApprovalWaiting|Stopped|ChainBroken|Denials)"]
   - source_matchers: [alertname="NasUnreachable"]
     target_matchers: [alertname=~"Nas(Pool|Snapshot).*"]
     equal: [nas]
